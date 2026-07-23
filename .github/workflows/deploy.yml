@@ -32,8 +32,11 @@ jobs:
       TF_IN_AUTOMATION: "true"
       TF_INPUT: "false"
       TF_WORKING_DIR: ./terraform
-      # Workspace is used to separate state files for different environments (dev, prod)
-      TF_WORKSPACE_NAME: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+      # TF_TOKEN_ is used for Terraform Cloud authentication to save state in a remote workspace.
+      # app_terraform_io is from the Terraform Cloud hostname (app.terraform.io).
+      TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
+      TF_CLOUD_ORGANIZATION: money-collection-app-org
+      TF_WORKSPACE: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
       # TF_VAR_ prefix directly maps env variable to Terraform variable
       TF_VAR_supabase_access_token: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       TF_VAR_supabase_organization_id: ${{ vars.SUPABASE_ORGANIZATION_ID }}
@@ -56,11 +59,6 @@ jobs:
 
       - name: Terraform Init
         run: terraform init -input=false
-
-      - name: Select Terraform workspace
-        run: |
-          terraform workspace select "$TF_WORKSPACE_NAME" \
-            || terraform workspace new "$TF_WORKSPACE_NAME"
 
       - name: Terraform Validate
         run: terraform validate

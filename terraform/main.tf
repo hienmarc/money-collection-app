@@ -1,4 +1,11 @@
 terraform {
+  cloud {
+    organization = "money-collection-app-org"
+    workspaces {
+      tags = ["money-collection-app"]
+    }
+  }
+
   required_providers {
     supabase = {
       source  = "supabase/supabase"
