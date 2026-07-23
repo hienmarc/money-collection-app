@@ -5,7 +5,6 @@ on:
     branches:
       - dev
       - main
-      - actions-tests
     paths:
       - "**.tf"
       - "**.tfvars"
