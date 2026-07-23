@@ -1,7 +1,6 @@
 terraform {
   cloud {
     organization = "money-collection-app-org"
-    
     workspaces {
       tags = ["money-collection-app"]
     }
