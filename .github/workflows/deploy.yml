@@ -1,0 +1,112 @@
+name: Deploy (Terraform + Supabase Migrations)
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+      - actions-tests
+    paths:
+      - "**.tf"
+      - "**.tfvars"
+      - "supabase/**"
+      - ".github/workflows/deploy.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  terraform:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'prod' || 'dev' }} 
+
+    outputs:
+      supabase_project_id: ${{ steps.tf_outputs.outputs.supabase_project_id }}
+
+    env:
+      TF_IN_AUTOMATION: "true"
+      TF_INPUT: "false"
+      TF_WORKING_DIR: ./terraform
+      # Workspace is used to separate state files for different environments (dev, prod)
+      TF_WORKSPACE_NAME: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+      # TF_VAR_ prefix directly maps env variable to Terraform variable
+      TF_VAR_supabase_access_token: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      TF_VAR_supabase_organization_id: ${{ vars.SUPABASE_ORGANIZATION_ID }}
+      TF_VAR_supabase_project_name: ${{ vars.SUPABASE_PROJECT_NAME }}
+      TF_VAR_supabase_database_password: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      TF_VAR_supabase_region: ${{ vars.SUPABASE_REGION }}
+
+    defaults:
+      run:
+        working-directory: ${{ env.TF_WORKING_DIR }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.1"
+
+      - name: Terraform Init
+        run: terraform init -input=false
+
+      - name: Select Terraform workspace
+        run: |
+          terraform workspace select "$TF_WORKSPACE_NAME" \
+            || terraform workspace new "$TF_WORKSPACE_NAME"
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -input=false -out=tfplan
+        continue-on-error: false
+
+      - name: Terraform Apply
+        run: terraform apply -input=false -auto-approve tfplan
+
+      - name: Read Terraform outputs
+        id: tf_outputs
+        run: echo "supabase_project_id=$(terraform output -raw supabase_project_id)" >> "$GITHUB_OUTPUT"
+
+      - name: Archive plan artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-${{ github.ref_name }}-${{ github.sha }}
+          path: ${{ env.TF_WORKING_DIR }}/tfplan
+          retention-days: 30
+
+  supabase-push-migrations:
+    name: Supabase Push Migrations
+    needs: terraform
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ needs.terraform.outputs.supabase_project_id }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link Supabase project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+
+      - name: Push database migrations
+        run: supabase db push
