@@ -1,4 +1,22 @@
-/// Supabase
+# --- Upstash Redis ---
+variable "redis_database_name" {
+  type = string
+}
+
+variable "redis_region" {
+  type = string
+}
+
+variable "upstash_email" {
+  type = string
+}
+
+variable "upstash_api_key" {
+  type = string
+  sensitive = true
+}
+
+# --- SUPABASE --- 
 variable "supabase_project_name" {
   type = string
 }
