@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import { cachedFetch } from "@/lib/cache"
 
+export const dynamic = "force-dynamic"
+
 const API_KEY = process.env.EXCHANGERATES_API_KEY
 const API_URL = "http://api.exchangeratesapi.io/v1/latest"
 
