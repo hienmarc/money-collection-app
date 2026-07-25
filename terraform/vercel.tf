@@ -18,6 +18,7 @@ resource "vercel_deployment" "money_collection_app_deployment" {
 
 resource "vercel_project_environment_variables" "money_collection_app_env_vars" {
   project_id = vercel_project.money_collection_app_project.id
+  depends_on = [upstash_redis_database.money_collection_app_redis]
 
   variables = [
     {
@@ -55,14 +56,12 @@ resource "vercel_project_environment_variables" "money_collection_app_env_vars" 
       value  = "https://${upstash_redis_database.money_collection_app_redis.endpoint}"
       target = [var.deployment_environment == "prod" ? "production" : "preview"]
       sensitive = false
-      depends_on = [upstash_redis_database.money_collection_app_redis]
     },
     {
       key    = "UPSTASH_REDIS_REST_TOKEN"
       value  = upstash_redis_database.money_collection_app_redis.rest_token
       target = [var.deployment_environment == "prod" ? "production" : "preview"]
       sensitive = true
-      depends_on = [upstash_redis_database.money_collection_app_redis]
     },
   ]
 }
