@@ -1,0 +1,7 @@
+resource "upstash_redis_database" "money_collection_app_redis" {
+  database_name  = var.redis_database_name
+  region         = "global"
+  primary_region = var.redis_region
+  tls            = true
+  eviction       = true
+}
