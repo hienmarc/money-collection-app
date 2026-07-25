@@ -16,5 +16,10 @@ terraform {
       source  = "upstash/upstash"
       version = "~> 1.5"
     }
+
+    vercel = {
+      source  = "vercel/vercel"
+      version = ">= 4.8"
+    }
   }
 }

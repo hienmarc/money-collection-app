@@ -5,14 +5,9 @@ output "supabase_project_id" {
 
 # --- REDIS ---
 output "redis_endpoint" {
-  value = upstash_redis_database.money-collection-app-redis.endpoint
+  value = upstash_redis_database.money_collection_app_redis.endpoint
 }
 
 output "redis_port" {
-  value = upstash_redis_database.money-collection-app-redis.port
-}
-
-output "redis_password" {
-  value     = upstash_redis_database.money-collection-app-redis.password
-  sensitive = true
+  value = upstash_redis_database.money_collection_app_redis.port
 }

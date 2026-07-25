@@ -4,3 +4,7 @@ resource "supabase_project" "money_collection_app_project" {
   database_password = var.supabase_database_password
   region            = var.supabase_region
 }
+
+data "supabase_apikeys" "money_collection_app_supabase_apikeys" {
+  project_ref = supabase_project.money_collection_app_project.id
+}
