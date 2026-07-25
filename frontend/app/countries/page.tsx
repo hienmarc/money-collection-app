@@ -50,7 +50,6 @@ import {
   ArrowUpDown,
   RefreshCw,
 } from "lucide-react"
-import CountryMap from "@/components/CountryMap"
 import { createClient } from "@/utils/supabase/client"
 import { useCountries } from "@/hooks/use-countries"
 
@@ -612,7 +611,6 @@ export default function CountriesPage() {
         <>
           {viewMode === "list" && renderListView()}
           {viewMode === "grid" && renderGridView()}
-          {viewMode === "map" && <CountryMap countries={countries} />}
         </>
       )}
 
