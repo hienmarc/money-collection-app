@@ -70,6 +70,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::<account-id>:role/<your-ci-role>
+          aws-region: ${{ vars.AWS_REGION }}
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
