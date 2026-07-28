@@ -5,6 +5,18 @@ variable "deployment_environment" {
   default     = "dev"
 }
 
+variable "github_repo" {
+  description = "The GitHub repository in the format 'owner/repo'."
+  type        = string
+}
+
+# --- AWS ---
+variable "aws_region" {
+  description = "The AWS region to deploy resources."
+  type        = string
+  default     = "us-east-1"
+}
+
 # --- Upstash Redis ---
 variable "redis_database_name" {
   description = "The name of the Upstash Redis database to be created."
