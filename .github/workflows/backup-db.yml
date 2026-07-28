@@ -1,0 +1,94 @@
+name: Backup Supabase DB
+
+on:
+  schedule:
+    - cron: "0 2 * * *"   # daily at 02:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  backup:
+    name: Backup Supabase DB
+    runs-on: ubuntu-latest
+    environment: prod
+
+    env:
+      # Terraform environment variables
+      TF_IN_AUTOMATION: "true"
+      TF_INPUT: "false"
+      TF_WORKING_DIR: ./terraform
+      TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
+      TF_CLOUD_ORGANIZATION: money-collection-app-org
+      TF_WORKSPACE: prod
+      # Supabase environment variables
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+    defaults:
+      run:
+        working-directory: ${{ env.TF_WORKING_DIR }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set date
+        id: date
+        run: echo "value=$(date +%F)" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.1"
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: latest
+
+      - name: Terraform Init
+        run: terraform init -input=false
+
+      - name: Read Supabase project ID
+        id: tf_outputs
+        run: echo "supabase_project_id=$(terraform output -raw supabase_project_id)" >> "$GITHUB_OUTPUT"
+
+      - name: Link supabase project
+        run: supabase link --project-ref "${{ steps.tf_outputs.outputs.supabase_project_id }}"
+
+      - name: Backup roles
+        run: supabase db dump -f "${{ steps.date.outputs.value }}_roles.sql" --role-only --linked
+
+      - name: Backup schemas
+        run: supabase db dump -f "${{ steps.date.outputs.value }}_schemas.sql" --schema public,auth --linked
+
+      - name: Backup data
+        run: supabase db dump -f "${{ steps.date.outputs.value }}_data.sql" --data-only --use-copy --schema public,auth --linked
+
+      - name: Read AWS role ARN
+        id: aws_role
+        run: echo "github_actions_role_arn=$(terraform output -raw github_actions_role_arn)" >> "$GITHUB_OUTPUT"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ steps.aws_role.outputs.github_actions_role_arn }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Read S3 bucket name
+        id: s3_bucket
+        run: echo "db_backup_bucket=$(terraform output -raw db_backup_bucket)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload backups to S3
+        env: 
+          BUCKET: ${{ steps.s3_bucket.outputs.db_backup_bucket }}
+          DATE: ${{ steps.date.outputs.value }}
+          SUPABASE_PROJECT_ID: ${{ steps.tf_outputs.outputs.supabase_project_id }}
+        run: |
+          for f in roles schemas data; do
+            aws s3 cp "${DATE}_${f}.sql" \
+              "s3://${BUCKET}/supabase/${SUPABASE_PROJECT_ID}/${DATE}/${f}.sql"
+          done

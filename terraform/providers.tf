@@ -10,3 +10,14 @@ provider "upstash" {
 provider "vercel" {
   api_token = var.vercel_api_token
 }
+
+provider "aws" {
+  region = var.aws_region
+
+  default_tags {
+    tags = {
+      Project     = "money-collection-app"
+      Environment = var.deployment_environment
+    }
+  }
+}
