@@ -30,6 +30,6 @@ data "aws_iam_policy_document" "trust" {
 }
 
 resource "aws_iam_role" "github_actions" {
-  name               = "${var.github_repo}-github-actions"
+  name               = "money-collection-app-github-actions"
   assume_role_policy = data.aws_iam_policy_document.trust.json
 }

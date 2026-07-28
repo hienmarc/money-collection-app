@@ -14,12 +14,15 @@ data "supabase_apikeys" "money_collection_app_supabase_apikeys" {
 resource "aws_s3_bucket" "mca_db_backup_bucket" {
   bucket = "money-collection-app-db-backup-bucket"
 
-  versioning {
-    enabled = true
-  }
-
   lifecycle {
     prevent_destroy = true
+  }
+}
+
+resource "aws_s3_bucket_versioning" "versioning_example" {
+  bucket = aws_s3_bucket.mca_db_backup_bucket.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
