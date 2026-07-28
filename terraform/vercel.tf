@@ -18,7 +18,10 @@ resource "vercel_deployment" "money_collection_app_deployment" {
 
 resource "vercel_project_environment_variables" "money_collection_app_env_vars" {
   project_id = vercel_project.money_collection_app_project.id
-  depends_on = [upstash_redis_database.money_collection_app_redis]
+  depends_on = [
+    upstash_redis_database.money_collection_app_redis, 
+    supabase_project.money_collection_app_project
+  ]
   
   variables = [
     {
