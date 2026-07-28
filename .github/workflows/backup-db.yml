@@ -39,12 +39,6 @@ jobs:
         id: date
         run: echo "value=$(date +%F)" >> "$GITHUB_OUTPUT"
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ steps.aws_role.outputs.github_actions_role_arn }}
-          aws-region: ${{ vars.AWS_REGION }}
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
@@ -77,7 +71,13 @@ jobs:
       - name: Read AWS role ARN
         id: aws_role
         run: echo "github_actions_role_arn=$(terraform output -raw github_actions_role_arn)" >> "$GITHUB_OUTPUT"
-
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ steps.aws_role.outputs.github_actions_role_arn }}
+          aws-region: ${{ vars.AWS_REGION }}
+      
       - name: Read S3 bucket name
         id: s3_bucket
         run: echo "db_backup_bucket=$(terraform output -raw db_backup_bucket)" >> "$GITHUB_OUTPUT"
