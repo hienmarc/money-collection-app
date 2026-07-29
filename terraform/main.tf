@@ -26,5 +26,15 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 6.0"
     }
+
+    tfe = {
+      source  = "hashicorp/tfe"
+      version = "~> 0.55"
+    }
   }
+}
+
+data "tfe_outputs" "bootstrap" {
+  organization = "money-collection-app-org"
+  workspace    = "money-collection-app-bootstrap"
 }

@@ -69,6 +69,6 @@ data "aws_iam_policy_document" "mca_db_backup_s3_publish" {
 
 resource "aws_iam_role_policy" "mca_db_backup_s3_publish" {
   name   = "mca-db-backup-s3-publish"
-  role   = aws_iam_role.github_actions.id
+  role   = data.tfe_outputs.bootstrap.values.github_actions_role_name
   policy = data.aws_iam_policy_document.mca_db_backup_s3_publish.json
 }
