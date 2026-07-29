@@ -41,7 +41,7 @@ jobs:
 
       # TF_VAR_ prefix directly maps env variable to Terraform variable
       TF_VAR_deployment_environment: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
-      TF_VAR_github_repo: ${{ github.repository }}
+      TF_VAR_github_repo: "${{ github.repository_owner }}@${{ github.repository_owner_id }}/${{ github.event.repository.name }}@${{ github.repository_id }}"
       ## AWS variables
       TF_VAR_aws_region: ${{ vars.AWS_REGION }}
       ## Supabase variables
