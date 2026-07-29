@@ -21,3 +21,5 @@ provider "aws" {
     }
   }
 }
+
+provider "tfe" {}

@@ -38,6 +38,7 @@ jobs:
       TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
       TF_CLOUD_ORGANIZATION: money-collection-app-org
       TF_WORKSPACE: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+      TFE_TOKEN: ${{ secrets.TF_API_TOKEN }}
 
       # TF_VAR_ prefix directly maps env variable to Terraform variable
       TF_VAR_deployment_environment: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
