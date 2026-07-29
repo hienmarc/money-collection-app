@@ -21,5 +21,10 @@ terraform {
       source  = "vercel/vercel"
       version = ">= 4.8"
     }
+
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.0"
+    }
   }
 }
