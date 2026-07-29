@@ -16,3 +16,7 @@ output "redis_port" {
 output "db_backup_bucket" {
   value = aws_s3_bucket.mca_db_backup_bucket.bucket
 }
+
+output "github_actions_role_arn" {
+  value = data.tfe_outputs.bootstrap.values.github_actions_role_arn
+}
