@@ -20,3 +20,7 @@ output "db_backup_bucket" {
 output "github_actions_role_arn" {
   value = aws_iam_role.github_actions.arn
 }
+
+output "git_repo" {
+  value = var.github_repo
+}
