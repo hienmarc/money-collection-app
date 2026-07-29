@@ -11,12 +11,19 @@ data "supabase_apikeys" "money_collection_app_supabase_apikeys" {
 }
 
 # --- AWS backup bucket for Supabase ---
+locals {
+  db_backup_bucket_name = "money-collection-app-db-backup-bucket"
+}
+
 resource "aws_s3_bucket" "mca_db_backup_bucket" {
-  bucket = "money-collection-app-db-backup-bucket"
+  bucket = local.db_backup_bucket_name
 
   lifecycle {
     prevent_destroy = true
   }
+
+  # Make sure policy is attached to role before creating the bucket
+  depends_on = [aws_iam_role_policy.mca_db_backup_s3_publish]
 }
 
 resource "aws_s3_bucket_versioning" "versioning_example" {
@@ -62,8 +69,8 @@ data "aws_iam_policy_document" "mca_db_backup_s3_publish" {
       "s3:CreateBucket"
     ]
     resources = [
-      aws_s3_bucket.mca_db_backup_bucket.arn,
-      "${aws_s3_bucket.mca_db_backup_bucket.arn}/*",
+      "arn:aws:s3:::${local.db_backup_bucket_name}",
+      "arn:aws:s3:::${local.db_backup_bucket_name}/*",
     ]
   }
 }
