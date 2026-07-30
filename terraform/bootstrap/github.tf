@@ -67,6 +67,7 @@ data "aws_iam_policy_document" "apply_pipeline_permissions" {
       "iam:PutRolePolicy",
       "iam:DeleteRolePolicy",
       "iam:GetRolePolicy",
+      "iam:TagRole"
     ]
     resources = [
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.aws_resource_prefix}-*",

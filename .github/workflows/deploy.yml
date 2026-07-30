@@ -90,6 +90,10 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
+      - name: Debug
+        id: tf_outputs
+        run: echo {{ env.TF_VAR_aws_resource_prefix }}
+
       - name: Terraform Plan
         id: plan
         run: terraform plan -input=false -out=tfplan
