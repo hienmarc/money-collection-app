@@ -12,18 +12,14 @@ data "supabase_apikeys" "money_collection_app_supabase_apikeys" {
 
 # --- AWS backup bucket for Supabase ---
 locals {
-  db_backup_bucket_name = "money-collection-app-db-backup-bucket"
+  db_backup_bucket_name = "${var.aws_resource_prefix}-db-backup-bucket"
 }
 
 resource "aws_s3_bucket" "mca_db_backup_bucket" {
   bucket = local.db_backup_bucket_name
-
   lifecycle {
     prevent_destroy = true
   }
-
-  # Make sure policy is attached to role before creating the bucket
-  depends_on = [aws_iam_role_policy.mca_db_backup_s3_publish]
 }
 
 resource "aws_s3_bucket_versioning" "versioning_example" {
@@ -35,15 +31,12 @@ resource "aws_s3_bucket_versioning" "versioning_example" {
 
 resource "aws_s3_bucket_lifecycle_configuration" "mca_db_backup_bucket_lifecycle" {
   bucket = aws_s3_bucket.mca_db_backup_bucket.id
-
   rule {
     id     = "ExpireOldBackups"
     status = "Enabled"
-
     expiration {
       days = 30
     }
-
     filter {
       prefix = ""
     }
@@ -58,15 +51,19 @@ resource "aws_s3_bucket_public_access_block" "mca_db_backup_bucket_public_access
   restrict_public_buckets = true
 }
 
-# --- IAM Role for GitHub Actions to access S3 bucket ---
+
+# --- IAM Role for GitHub Actions to publish DB backups ---
+resource "aws_iam_role" "mca_db_backup_role" {
+  name               = "${var.aws_resource_prefix}-db-backup-publish"
+  assume_role_policy = data.aws_iam_policy_document.mca_db_backup_assume_role.json
+}
+
 data "aws_iam_policy_document" "mca_db_backup_s3_publish" {
   statement {
     effect = "Allow"
     actions = [
       "s3:PutObject",
-      "s3:GetObject",
       "s3:ListBucket",
-      "s3:CreateBucket"
     ]
     resources = [
       "arn:aws:s3:::${local.db_backup_bucket_name}",
@@ -77,6 +74,6 @@ data "aws_iam_policy_document" "mca_db_backup_s3_publish" {
 
 resource "aws_iam_role_policy" "mca_db_backup_s3_publish" {
   name   = "mca-db-backup-s3-publish"
-  role   = data.tfe_outputs.bootstrap.values.github_actions_role_name
+  role   = aws_iam_role.mca_db_backup_role.id
   policy = data.aws_iam_policy_document.mca_db_backup_s3_publish.json
 }
