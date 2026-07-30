@@ -91,7 +91,6 @@ jobs:
         run: terraform validate
 
       - name: Debug
-        id: tf_outputs
         run: echo ${{ env.TF_VAR_aws_resource_prefix }}
 
       - name: Terraform Plan
