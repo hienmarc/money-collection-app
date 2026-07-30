@@ -72,6 +72,26 @@ data "aws_iam_policy_document" "apply_pipeline_permissions" {
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.aws_resource_prefix}-*",
     ]
   }
+
+  statement {
+  effect = "Allow"
+    sid    = "ReadOidcProvider"
+    actions = [
+      "iam:ListOpenIDConnectProviders",
+    ]
+    resources = ["*"]
+  }
+  
+  statement {
+    sid    = "GetOidcProvider"
+    effect = "Allow"
+    actions = [
+      "iam:GetOpenIDConnectProvider",
+    ]
+    resources = [
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/token.actions.githubusercontent.com",
+    ]
+  }
 }
 
 resource "aws_iam_role_policy" "apply_pipeline_permissions" {

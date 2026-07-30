@@ -1,4 +1,4 @@
-data "aws_iam_openid_connect_provider" "github_actions" {
+data "aws_iam_openid_connect_provider" "github" {
    url = "https://token.actions.githubusercontent.com"
 }
 
@@ -9,7 +9,7 @@ data "aws_iam_policy_document" "mca_db_backup_assume_role" {
 
     principals {
       type        = "Federated"
-      identifiers = [data.aws_iam_openid_connect_provider.github_actions.arn]
+      identifiers = [data.aws_iam_openid_connect_provider.github.arn]
     }
 
     condition {
