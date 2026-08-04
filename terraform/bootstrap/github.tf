@@ -1,7 +1,7 @@
 resource "aws_iam_openid_connect_provider" "github" {
-  url             = "https://token.actions.githubusercontent.com"
-  client_id_list  = ["sts.amazonaws.com"]
-  
+  url            = "https://token.actions.githubusercontent.com"
+  client_id_list = ["sts.amazonaws.com"]
+
   thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
 }
 
@@ -43,13 +43,16 @@ data "aws_iam_policy_document" "apply_pipeline_permissions" {
     actions = [
       "s3:CreateBucket",
       "s3:DeleteBucket",
-      "s3:GetBucketLocation",
+      "s3:List*",
+      "s3:Get*",
+      "s3:DeleteBucketPolicy",
+      "s3:PutEncryptionConfiguration",
+      "s3:PutBucketAcl",
+      "s3:PutBucketTagging",
       "s3:PutBucketVersioning",
-      "s3:GetBucketVersioning",
       "s3:PutLifecycleConfiguration",
-      "s3:GetLifecycleConfiguration",
       "s3:PutBucketPublicAccessBlock",
-      "s3:GetBucketPublicAccessBlock",
+      "s3:PutBucketPolicy",
     ]
     resources = [
       "arn:aws:s3:::${var.aws_resource_prefix}-*",
@@ -75,14 +78,14 @@ data "aws_iam_policy_document" "apply_pipeline_permissions" {
   }
 
   statement {
-  effect = "Allow"
+    effect = "Allow"
     sid    = "ReadOidcProvider"
     actions = [
       "iam:ListOpenIDConnectProviders",
     ]
     resources = ["*"]
   }
-  
+
   statement {
     sid    = "GetOidcProvider"
     effect = "Allow"

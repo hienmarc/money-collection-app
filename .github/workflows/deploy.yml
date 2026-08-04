@@ -33,7 +33,6 @@ jobs:
       TF_IN_AUTOMATION: "true"
       TF_INPUT: "false"
       TF_WORKING_DIR: ./terraform
-      TF_LOG: "DEBUG"
       # TF_TOKEN_ is used for Terraform Cloud authentication to save state in a remote workspace.
       # app_terraform_io is from the Terraform Cloud hostname (app.terraform.io).
       TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
