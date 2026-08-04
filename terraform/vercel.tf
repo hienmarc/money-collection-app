@@ -7,13 +7,18 @@ data "vercel_project_directory" "money_collection_app_directory" {
   path = "../frontend"
 }
 
+resource "time_sleep" "wait_for_env_vars" {
+  depends_on      = [vercel_project_environment_variables.money_collection_app_env_vars]
+  create_duration = "10s"
+}
+
 resource "vercel_deployment" "money_collection_app_deployment" {
   project_id  = vercel_project.money_collection_app_project.id
   files       = data.vercel_project_directory.money_collection_app_directory.files
   path_prefix = "../frontend"
   production  = var.deployment_environment == "prod" ? true : false
 
-  depends_on = [vercel_project_environment_variables.money_collection_app_env_vars]
+  depends_on = [time_sleep.wait_for_env_vars]
 }
 
 resource "vercel_project_environment_variables" "money_collection_app_env_vars" {

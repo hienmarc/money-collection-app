@@ -65,11 +65,11 @@ data "aws_iam_policy_document" "apply_pipeline_permissions" {
     actions = [
       "iam:CreateRole",
       "iam:DeleteRole",
-      "iam:GetRole",
+      "iam:Get*",
+      "iam:List*",
       "iam:UpdateAssumeRolePolicy",
-      "iam:PutRolePolicy",
       "iam:DeleteRolePolicy",
-      "iam:GetRolePolicy",
+      "iam:PutRolePolicy",
       "iam:TagRole"
     ]
     resources = [
