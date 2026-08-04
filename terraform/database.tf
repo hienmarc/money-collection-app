@@ -13,9 +13,9 @@ data "supabase_apikeys" "money_collection_app_supabase_apikeys" {
 # --- AWS backup bucket for Supabase ---
 resource "aws_s3_bucket" "mca_db_backup_bucket" {
   bucket = "${var.aws_resource_prefix}-db-backup-bucket"
-  lifecycle {
-    prevent_destroy = true
-  }
+  # lifecycle {
+  #   prevent_destroy = true
+  # }
 }
 
 resource "aws_s3_bucket_versioning" "versioning_example" {
