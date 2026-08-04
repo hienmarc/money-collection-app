@@ -6,6 +6,7 @@ provider "registry.terraform.io/hashicorp/aws" {
   constraints = "~> 6.0"
   hashes = [
     "h1:741DoGPD40A9X3e/30UA/TBlhhJFQwC6+1aLqM/v6r8=",
+    "h1:gSTd4VOv0lEjCGP5deZ4hRMBZhIOUbtS4AlCML+3gIo=",
     "zh:2b3fbb3bebcc663b85d5fd9bbc2d131ab89322d696ff5c6ac6b7ffb7b5fe92e7",
     "zh:30e56ccc7f33a7778ab323a28fe893d8e9200dc5fb92ccb7023bee808db3c1b0",
     "zh:67dca271bef16547ef8ab5a6349f9bce39d91d7c1ae3d8388ada687ca774ba44",
@@ -30,6 +31,7 @@ provider "registry.terraform.io/hashicorp/tfe" {
   constraints = "~> 0.55"
   hashes = [
     "h1:J38XWgIpzM2Oam2VqzJ4Ls3HLhSXQoGvlgdnswxsLss=",
+    "h1:teVdOezI465bLv/C8vhyvEoC/0QSFwsOo00skZNn/NU=",
     "zh:212a4b646f5340362f8f860c4446f6430a0203956f5943eb6ebe35d0d8d6ea7c",
     "zh:3209e7a5ed101f7293de75488ee7ce01c49b588cfe7fa4c59712d9ac9ec0e1e7",
     "zh:48cf8b5646aba57718d4dd138a1a8101b3c357c13f8b534ede6b100feb1d00b0",
@@ -50,6 +52,7 @@ provider "registry.terraform.io/supabase/supabase" {
   version     = "1.9.1"
   constraints = "~> 1.0"
   hashes = [
+    "h1:ZTmVkODWeBvyPqaAGTHgUayfnL9gsZ/cXKtTT1ZemAo=",
     "h1:ode7Z4s/R28AA2bLKRghmXToR33YumPXAqW1jYJEkB8=",
     "zh:0e4bedace67d4688bfdf677c71fdd93029c6393820af921121aa9d86d3f371c2",
     "zh:0ec2d76a30b2d72ed6670c35897bec6a511b8ad129ec9e9c6a2f341345972aeb",
@@ -72,6 +75,7 @@ provider "registry.terraform.io/upstash/upstash" {
   version     = "1.5.3"
   constraints = "~> 1.5"
   hashes = [
+    "h1:PfqvLUmRUHWGFVxMGtiQyby6Xt+NDMnKqO6dgpaGOsk=",
     "h1:sLYNR2A0QEfGHB9qtfY9tEFtodL3nXoYacQV/c7eNrs=",
     "zh:109bbfca01acc2887a2ccce09036b21c1837cb04f843dd6d8eb93fd1392409d0",
     "zh:279a6313ce37de51ba926fd0bf890127671b726df9328c2d29b86a99ed4df39b",
@@ -94,6 +98,7 @@ provider "registry.terraform.io/vercel/vercel" {
   version     = "5.5.0"
   constraints = ">= 4.8.0"
   hashes = [
+    "h1:2oG5IW4aNOIOdAjwyKfdZYmKtVAKiLUICcsPN2546Uo=",
     "h1:INkd1/TjsJAUmOVXQ+izqZp9juaaKqlRFW1lOXBQ5xg=",
     "zh:29714ce971c08b3351e90bc9d723bff6b78518e63ab9cc3bd374728ddf5836f5",
     "zh:2e5524e130fa1314f67a165e3672404f8444a8ccb2368322554f6d19c0b787a2",
