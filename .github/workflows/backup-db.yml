@@ -49,12 +49,13 @@ jobs:
         with:
           version: latest
 
+      - name: Terraform Init
+        run: terraform init -input=false
+
       - name: Read Supabase project ID
         id: supabase_project_id
         run: echo "supabase_project_id=$(terraform output -raw supabase_project_id)" >> "$GITHUB_OUTPUT"
 
-      - name: Terraform Init
-        run: terraform init -input=false
 
       - name: Link supabase project
         run: supabase link --project-ref "${{ steps.supabase_project_id.outputs.supabase_project_id }}"
