@@ -22,4 +22,4 @@ provider "aws" {
   }
 }
 
-provider "tfe" {}
+provider "tfe" { }
