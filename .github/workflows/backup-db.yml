@@ -49,11 +49,15 @@ jobs:
         with:
           version: latest
 
+      - name: Read Supabase project ID
+        id: supabase_project_id
+        run: echo "supabase_project_id=$(terraform output -raw supabase_project_id)" >> "$GITHUB_OUTPUT"
+
       - name: Terraform Init
         run: terraform init -input=false
 
       - name: Link supabase project
-        run: supabase link --project-ref "${{ steps.tf_outputs.outputs.supabase_project_id }}"
+        run: supabase link --project-ref "${{ steps.supabase_project_id.outputs.supabase_project_id }}"
 
       - name: Backup roles
         run: supabase db dump -f "${{ steps.date.outputs.value }}_roles.sql" --role-only --linked
@@ -82,7 +86,7 @@ jobs:
         env: 
           BUCKET: ${{ steps.s3_bucket.outputs.db_backup_bucket }}
           DATE: ${{ steps.date.outputs.value }}
-          SUPABASE_PROJECT_ID: ${{ steps.tf_outputs.outputs.supabase_project_id }}
+          SUPABASE_PROJECT_ID: ${{ steps.supabase_project_id.outputs.supabase_project_id }}
         run: |
           for f in roles schemas data; do
             aws s3 cp "${DATE}_${f}.sql" \
