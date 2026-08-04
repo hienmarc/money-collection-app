@@ -13,7 +13,7 @@ jobs:
   backup:
     name: Backup Supabase DB
     runs-on: ubuntu-latest
-    environment: prod
+    environment: dev
 
     env:
       # Terraform environment variables
@@ -22,7 +22,7 @@ jobs:
       TF_WORKING_DIR: ./terraform
       TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
       TF_CLOUD_ORGANIZATION: money-collection-app-org
-      TF_WORKSPACE: prod
+      TF_WORKSPACE: dev
       # Supabase environment variables
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
@@ -55,8 +55,7 @@ jobs:
       - name: Read Supabase project ID
         id: supabase_project_id
         run: echo "supabase_project_id=$(terraform output -raw supabase_project_id)" >> "$GITHUB_OUTPUT"
-
-
+      
       - name: Link supabase project
         run: supabase link --project-ref "${{ steps.supabase_project_id.outputs.supabase_project_id }}"
 
