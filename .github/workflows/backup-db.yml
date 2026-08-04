@@ -19,16 +19,13 @@ jobs:
       # Terraform environment variables
       TF_IN_AUTOMATION: "true"
       TF_INPUT: "false"
+      TF_WORKING_DIR: ./terraform
       TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
       TF_CLOUD_ORGANIZATION: money-collection-app-org
       TF_WORKSPACE: dev
       # Supabase environment variables
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-
-    defaults:
-      run:
-        working-directory: ${{ env.TF_WORKING_DIR }}
 
     steps:
       - name: Checkout
