@@ -19,7 +19,6 @@ jobs:
       # Terraform environment variables
       TF_IN_AUTOMATION: "true"
       TF_INPUT: "false"
-      TF_WORKING_DIR: ./terraform
       TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
       TF_CLOUD_ORGANIZATION: money-collection-app-org
       TF_WORKSPACE: dev
@@ -50,10 +49,12 @@ jobs:
           version: latest
 
       - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform init -input=false
 
       - name: Read Supabase project ID
         id: supabase_project_id
+        working-directory: ${{ env.TF_WORKING_DIR }}
         run: echo "supabase_project_id=$(terraform output -raw supabase_project_id)" >> "$GITHUB_OUTPUT"
       
       - name: Link supabase project
@@ -80,6 +81,7 @@ jobs:
       
       - name: Read S3 bucket name
         id: s3_bucket
+        working-directory: ${{ env.TF_WORKING_DIR }}
         run: echo "db_backup_bucket=$(terraform output -raw db_backup_bucket)" >> "$GITHUB_OUTPUT"
 
       - name: Upload backups to S3
