@@ -21,5 +21,25 @@ terraform {
       source  = "vercel/vercel"
       version = ">= 4.8"
     }
+
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.0"
+    }
+
+    tfe = {
+      source  = "hashicorp/tfe"
+      version = "~> 0.55"
+    }
+
+    time = {
+      source  = "hashicorp/time"
+      version = "~> 0.11"
+    }
   }
+}
+
+data "tfe_outputs" "bootstrap" {
+  organization = "money-collection-app-org"
+  workspace    = "money-collection-app-bootstrap"
 }

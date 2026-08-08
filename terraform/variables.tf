@@ -17,6 +17,11 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
+variable "aws_resource_prefix" {
+  description = "Prefix for project's resources. Used for filter IAM policies."
+  type        = string
+}
+
 # --- Upstash Redis ---
 variable "redis_database_name" {
   description = "The name of the Upstash Redis database to be created."

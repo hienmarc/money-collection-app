@@ -14,6 +14,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 concurrency:
   group: deploy-${{ github.ref_name }}
@@ -37,12 +38,14 @@ jobs:
       TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
       TF_CLOUD_ORGANIZATION: money-collection-app-org
       TF_WORKSPACE: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+      TFE_TOKEN: ${{ secrets.TF_API_TOKEN }}
 
       # TF_VAR_ prefix directly maps env variable to Terraform variable
       TF_VAR_deployment_environment: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
-      TF_VAR_github_repo: ${{ github.repository }}
+      TF_VAR_github_repo: "${{ github.repository_owner }}@${{ github.repository_owner_id }}/${{ github.event.repository.name }}@${{ github.repository_id }}"
       ## AWS variables
       TF_VAR_aws_region: ${{ vars.AWS_REGION }}
+      TF_VAR_aws_resource_prefix: ${{ vars.AWS_RESOURCE_PREFIX }}
       ## Supabase variables
       TF_VAR_supabase_access_token: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       TF_VAR_supabase_organization_id: ${{ vars.SUPABASE_ORGANIZATION_ID }}
@@ -77,9 +80,18 @@ jobs:
 
       - name: Terraform Init
         run: terraform init -input=false
+        
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_GITHUB_ACTIONS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Terraform Validate
         run: terraform validate
+
+      - name: Debug
+        run: echo ${{ env.TF_VAR_aws_resource_prefix }}
 
       - name: Terraform Plan
         id: plan

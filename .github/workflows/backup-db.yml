@@ -27,10 +27,6 @@ jobs:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
 
-    defaults:
-      run:
-        working-directory: ${{ env.TF_WORKING_DIR }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -50,14 +46,16 @@ jobs:
           version: latest
 
       - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform init -input=false
 
       - name: Read Supabase project ID
-        id: tf_outputs
+        id: supabase_project_id
+        working-directory: ${{ env.TF_WORKING_DIR }}
         run: echo "supabase_project_id=$(terraform output -raw supabase_project_id)" >> "$GITHUB_OUTPUT"
-
+      
       - name: Link supabase project
-        run: supabase link --project-ref "${{ steps.tf_outputs.outputs.supabase_project_id }}"
+        run: supabase link --project-ref "${{ steps.supabase_project_id.outputs.supabase_project_id }}"
 
       - name: Backup roles
         run: supabase db dump -f "${{ steps.date.outputs.value }}_roles.sql" --role-only --linked
@@ -68,25 +66,22 @@ jobs:
       - name: Backup data
         run: supabase db dump -f "${{ steps.date.outputs.value }}_data.sql" --data-only --use-copy --schema public,auth --linked
 
-      - name: Read AWS role ARN
-        id: aws_role
-        run: echo "github_actions_role_arn=$(terraform output -raw github_actions_role_arn)" >> "$GITHUB_OUTPUT"
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ steps.aws_role.outputs.github_actions_role_arn }}
+          role-to-assume: ${{ vars.AWS_GITHUB_ACTIONS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
-
+      
       - name: Read S3 bucket name
         id: s3_bucket
+        working-directory: ${{ env.TF_WORKING_DIR }}
         run: echo "db_backup_bucket=$(terraform output -raw db_backup_bucket)" >> "$GITHUB_OUTPUT"
 
       - name: Upload backups to S3
         env: 
           BUCKET: ${{ steps.s3_bucket.outputs.db_backup_bucket }}
           DATE: ${{ steps.date.outputs.value }}
-          SUPABASE_PROJECT_ID: ${{ steps.tf_outputs.outputs.supabase_project_id }}
+          SUPABASE_PROJECT_ID: ${{ steps.supabase_project_id.outputs.supabase_project_id }}
         run: |
           for f in roles schemas data; do
             aws s3 cp "${DATE}_${f}.sql" \
