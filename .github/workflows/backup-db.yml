@@ -13,7 +13,7 @@ jobs:
   backup:
     name: Backup Supabase DB
     runs-on: ubuntu-latest
-    environment: dev
+    environment: prod
 
     env:
       # Terraform environment variables
@@ -22,7 +22,7 @@ jobs:
       TF_WORKING_DIR: ./terraform
       TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
       TF_CLOUD_ORGANIZATION: money-collection-app-org
-      TF_WORKSPACE: dev
+      TF_WORKSPACE: prod
       # Supabase environment variables
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}

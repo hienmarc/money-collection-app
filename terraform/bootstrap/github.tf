@@ -46,6 +46,7 @@ data "aws_iam_policy_document" "apply_pipeline_permissions" {
       "s3:List*",
       "s3:Get*",
       "s3:DeleteBucketPolicy",
+      "s3:PutObject",
       "s3:PutEncryptionConfiguration",
       "s3:PutBucketAcl",
       "s3:PutBucketTagging",

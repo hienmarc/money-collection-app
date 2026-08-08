@@ -12,7 +12,7 @@ data "supabase_apikeys" "money_collection_app_supabase_apikeys" {
 
 # --- AWS backup bucket for Supabase ---
 resource "aws_s3_bucket" "mca_db_backup_bucket" {
-  bucket = "${var.aws_resource_prefix}-db-backup-bucket"
+  bucket = "${var.aws_resource_prefix}-db-backup-bucket-${var.deployment_environment}"
   # lifecycle {
   #   prevent_destroy = true
   # }
@@ -62,8 +62,8 @@ data "aws_iam_policy_document" "mca_db_backup_s3_publish" {
       "s3:ListBucket",
     ]
     resources = [
-      "arn:aws:s3:::${var.aws_resource_prefix}-db-backup-bucket",
-      "arn:aws:s3:::${var.aws_resource_prefix}-db-backup-bucket/*",
+      "arn:aws:s3:::${var.aws_resource_prefix}-db-backup-bucket-${var.deployment_environment}",
+      "arn:aws:s3:::${var.aws_resource_prefix}-db-backup-bucket-${var.deployment_environment}/*",
     ]
   }
 }
