@@ -8,8 +8,8 @@ on:
       - actions-tests
     paths:
       - "**.tf"
-      - "**.tfvars"
       - "supabase/**"
+      - "frontend/**"
       - ".github/workflows/deploy.yml"
 
 permissions:
