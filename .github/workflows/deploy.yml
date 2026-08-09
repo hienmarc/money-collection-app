@@ -6,6 +6,7 @@ on:
       - dev
       - main
       - actions-tests
+      - prod-actions
     paths:
       - "**.tf"
       - "supabase/**"
@@ -24,7 +25,7 @@ jobs:
   terraform:
     name: Terraform Apply
     runs-on: ubuntu-latest
-    environment: ${{ github.ref_name == 'main' && 'prod' || 'dev' }} 
+    environment: ${{ github.ref_name == 'prod-actions' && 'prod' || 'dev' }} 
 
     outputs:
       supabase_project_id: ${{ steps.tf_outputs.outputs.supabase_project_id }}
@@ -37,11 +38,11 @@ jobs:
       # app_terraform_io is from the Terraform Cloud hostname (app.terraform.io).
       TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
       TF_CLOUD_ORGANIZATION: money-collection-app-org
-      TF_WORKSPACE: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+      TF_WORKSPACE: ${{ github.ref_name == 'prod-actions' && 'prod' || 'dev' }}
       TFE_TOKEN: ${{ secrets.TF_API_TOKEN }}
 
       # TF_VAR_ prefix directly maps env variable to Terraform variable
-      TF_VAR_deployment_environment: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+      TF_VAR_deployment_environment: ${{ github.ref_name == 'prod-actions' && 'prod' || 'dev' }}
       TF_VAR_github_repo: "${{ github.repository_owner }}@${{ github.repository_owner_id }}/${{ github.event.repository.name }}@${{ github.repository_id }}"
       ## AWS variables
       TF_VAR_aws_region: ${{ vars.AWS_REGION }}
@@ -117,7 +118,7 @@ jobs:
     name: Supabase Push Migrations
     needs: terraform
     runs-on: ubuntu-latest
-    environment: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+    environment: ${{ github.ref_name == 'prod-actions' && 'prod' || 'dev' }}
 
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
