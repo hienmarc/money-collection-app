@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { use, useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label"
 import { toast } from "@/components/ui/use-toast"
 import { createClient } from "@/utils/supabase/client"
 
-export default function EditCountryPage({ params }: { params: { id: string } }) {
+export default function EditCountryPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: countryId } = use(params)
   const supabase = createClient()
   const router = useRouter()
   const [country, setCountry] = useState(null)
@@ -23,7 +24,7 @@ export default function EditCountryPage({ params }: { params: { id: string } }) 
   }, [])
 
   async function fetchCountry() {
-    const { data, error } = await supabase.from("countries").select("*").eq("countryid", params.id).single()
+    const { data, error } = await supabase.from("countries").select("*").eq("countryid", countryId).single()
 
     if (error) {
       console.error("Error fetching country:", error)
@@ -54,7 +55,7 @@ export default function EditCountryPage({ params }: { params: { id: string } }) 
         name,
         code,
       })
-      .eq("countryid", params.id)
+      .eq("countryid", countryId)
 
     setIsLoading(false)
 

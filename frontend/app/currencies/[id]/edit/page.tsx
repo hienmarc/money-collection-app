@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { use, useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,7 +11,8 @@ import { MultiSelect } from "@/components/ui/multi-select"
 import { toast } from "@/components/ui/use-toast"
 import { createClient } from "@/utils/supabase/client"
 
-export default function EditCurrencyPage({ params }: { params: { id: string } }) {
+export default function EditCurrencyPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: currencyId } = use(params)
   const supabase = createClient()
   const router = useRouter()
   const [currency, setCurrency] = useState(null)
@@ -35,7 +36,7 @@ export default function EditCurrencyPage({ params }: { params: { id: string } })
         *,
         currencycountry(countryid)
       `)
-      .eq("currencyid", params.id)
+      .eq("currencyid", currencyId)
       .single()
 
     if (error) {
@@ -81,7 +82,7 @@ export default function EditCurrencyPage({ params }: { params: { id: string } })
         symbol,
         subunit,
       })
-      .eq("currencyid", params.id)
+      .eq("currencyid", id)
 
     if (error) {
       console.error("Error updating currency:", error)
@@ -92,14 +93,14 @@ export default function EditCurrencyPage({ params }: { params: { id: string } })
       })
     } else {
       // Update country associations
-      const { error: deleteError } = await supabase.from("currencycountry").delete().eq("currencyid", params.id)
+      const { error: deleteError } = await supabase.from("currencycountry").delete().eq("currencyid", currencyId)
 
       if (deleteError) {
         console.error("Error deleting old country associations:", deleteError)
       }
 
       const newAssociations = countries.map((countryId) => ({
-        currencyid: Number.parseInt(params.id),
+        currencyid: Number.parseInt(currencyId),
         countryid: Number.parseInt(countryId),
         iscurrent: true,
       }))

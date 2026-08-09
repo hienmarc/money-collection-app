@@ -11,12 +11,14 @@ import BanknoteCard from "@/components/BanknoteCard"
 import { Globe, MapPin, Landmark, CreditCard, Edit, ArrowLeft, ExternalLink, Banknote, Info, Users, Loader2 } from "lucide-react"
 import { createClient } from "@/utils/supabase/client"
 import { useQuery } from "@tanstack/react-query"
+import { use } from "react"
 
-export default function CountryDetailsPage({ params }: { params: { id: string } }) {
+export default function CountryDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = createClient()
+  const { id: countryId } = use(params)
 
   const { data: country, isLoading, error } = useQuery({
-    queryKey: ["country", params.id],
+    queryKey: ["country", countryId],
     queryFn: async () => {
       const { data, error: countryError } = await supabase
         .from("countries")
@@ -30,7 +32,7 @@ export default function CountryDetailsPage({ params }: { params: { id: string } 
             )
           )
         `)
-        .eq("countryid", params.id)
+        .eq("countryid", countryId)
         .single()
 
       if (countryError) {
@@ -137,7 +139,7 @@ export default function CountryDetailsPage({ params }: { params: { id: string } 
                 )}
               </div>
             </div>
-            <Link href={`/countries/${params.id}/edit`}>
+            <Link href={`/countries/${countryId}/edit`}>
               <Button variant="outline" size="sm" className="h-9">
                 <Edit className="mr-2 h-4 w-4" />
                 Edit Country

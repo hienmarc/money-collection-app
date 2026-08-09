@@ -2,9 +2,9 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import { useRouter } from "next/navigation"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -18,11 +18,11 @@ import { BanknoteGrade, Currency, StorageUnit } from "@/lib/types"
 import { useBanknote } from "@/hooks/use-banknotes"
 import { createClient } from "@/utils/supabase/client"
 
-export default function EditBanknotePage({ params }: { params: { id: string } }) {
+export default function EditBanknotePage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = createClient()
   const router = useRouter()
-  const queryClient = useQueryClient()
-  const { banknote, isLoading: isLoadingBanknote, updateBanknote, isUpdating } = useBanknote(params.id)
+  const { id: banknoteId } = use(params)
+  const { banknote, isLoading: isLoadingBanknote, updateBanknote, isUpdating } = useBanknote(banknoteId)
 
   const [formData, setFormData] = useState({
     code: "",
