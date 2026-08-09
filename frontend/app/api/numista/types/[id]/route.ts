@@ -4,8 +4,8 @@ import { cachedFetch } from "@/lib/cache"
 const NUMISTA_API_KEY = process.env.NUMISTA_API_KEY
 const NUMISTA_API_URL = "https://api.numista.com/v3"
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
-  const id = params.id
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
 
   if (!id) {
     return NextResponse.json({ error: "Type ID is required" }, { status: 400 })

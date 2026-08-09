@@ -24,7 +24,7 @@ interface RestCountry {
 export async function GET() {
   try {
     // Fetch all countries from REST Countries API using v5 pagination
-    const supabase = createClient()
+    const supabase = await createClient()
     let allCountries: RestCountry[] = []
     let offset = 0
     let hasMore = true

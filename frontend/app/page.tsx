@@ -287,8 +287,6 @@ export default function Dashboard() {
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="distribution">Distribution</TabsTrigger>
               <TabsTrigger value="timeline">Timeline</TabsTrigger>
-              <TabsTrigger value="physical">Physical Properties</TabsTrigger>
-              <TabsTrigger value="value">Denominations</TabsTrigger>
             </TabsList>
 
             <TabsContent value="distribution" className="space-y-4">

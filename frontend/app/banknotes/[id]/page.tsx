@@ -1,5 +1,6 @@
 "use client"
 
+import { use } from "react"
 import { notFound, useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
@@ -7,12 +8,8 @@ import {
   ArrowLeft,
   Edit,
   Trash2,
-  Share2,
-  Heart,
   Ruler,
   CreditCard,
-  DollarSign,
-  Bookmark,
   Info,
   Loader2,
 } from "lucide-react"
@@ -33,9 +30,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 
-export default function BanknoteDetailPage({ params }: { params: { id: string } }) {
+export default function BanknoteDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
-  const { banknote, isLoading, error } = useBanknote(params.id)
+  const { id: banknoteId } = use(params)
+  const { banknote, isLoading, error } = useBanknote(banknoteId)
   const { deleteBanknote, isDeleting } = useBanknotes()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
@@ -52,7 +50,7 @@ export default function BanknoteDetailPage({ params }: { params: { id: string } 
   }
 
   const handleDelete = () => {
-    deleteBanknote(params.id, {
+    deleteBanknote(banknoteId, {
       onSuccess: () => {
         router.push("/banknotes")
         router.refresh()
@@ -71,16 +69,8 @@ export default function BanknoteDetailPage({ params }: { params: { id: string } 
           <span>Back to Banknotes</span>
         </Link>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
-            <Share2 className="mr-2 h-4 w-4" />
-            Share
-          </Button>
-          <Button variant="outline" size="sm">
-            <Heart className="mr-2 h-4 w-4" />
-            Add to Favorites
-          </Button>
           <Button variant="outline" size="sm" asChild>
-            <Link href={`/banknotes/${params.id}/edit`}>
+            <Link href={`/banknotes/${banknoteId}/edit`}>
               <Edit className="mr-2 h-4 w-4" />
               Edit
             </Link>
@@ -145,8 +135,6 @@ export default function BanknoteDetailPage({ params }: { params: { id: string } 
               <Tabs defaultValue="details" className="w-full">
                 <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="details">Details</TabsTrigger>
-                  <TabsTrigger value="collection">Collection Info</TabsTrigger>
-                  <TabsTrigger value="notes">Notes</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="details" className="pt-4">
@@ -206,7 +194,7 @@ export default function BanknoteDetailPage({ params }: { params: { id: string } 
       {/* Related Items Section */}
       <div className="mt-8">
         <h2 className="text-2xl font-bold mb-4">Related Banknotes</h2>
-        <RelatedBanknotes currentBanknoteId={params.id} currencyId={currencyId!} />
+        <RelatedBanknotes currentBanknoteId={banknoteId} currencyId={currencyId!} />
       </div>
 
       {/* Delete Confirmation Dialog */}

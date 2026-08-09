@@ -1,34 +1,86 @@
+"use client"
+
+import { useEffect, useState, use } from "react"
 import Link from "next/link"
-import { notFound } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Loader2 } from "lucide-react"
 import { createClient } from "@/utils/supabase/client"
 
-async function getCurrencyDetails(id: string) {
-  const supabase = createClient()
-  const { data: currency, error } = await supabase
-    .from("currencies")
-    .select(`
-      *,
-      currencycountry!inner(countries(*)),
-      banknotes(*)
-    `)
-    .eq("currencyid", id)
-    .single()
+export default function CurrencyDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const router = useRouter()
+  const {id: currencyId} = use(params)
+  const [currency, setCurrency] = useState<any | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  if (error) {
-    console.error("Error fetching currency details:", error)
-    return null
+  useEffect(() => {
+    let isMounted = true
+
+    async function fetchCurrency() {
+      if (!currencyId) {
+        setError("Currency ID is missing.")
+        setIsLoading(false)
+        return
+      }
+
+      setIsLoading(true)
+      setError(null)
+
+      const supabase = createClient()
+      const { data: currencyData, error: fetchError } = await supabase
+        .from("currencies")
+        .select(`
+          *,
+          currencycountry!inner(countries(*)),
+          banknotes(*)
+        `)
+        .eq("currencyid", currencyId)
+        .single()
+
+      if (!isMounted) return
+
+      if (fetchError) {
+        console.error("Error fetching currency details:", fetchError)
+        setError(fetchError.message || "Failed to load currency details.")
+        setCurrency(null)
+      } else if (!currencyData) {
+        setError("Currency not found.")
+        setCurrency(null)
+      } else {
+        setCurrency(currencyData)
+      }
+
+      setIsLoading(false)
+    }
+
+    fetchCurrency()
+
+    return () => {
+      isMounted = false
+    }
+  }, [currencyId])
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
   }
 
-  return currency
-}
-
-export default async function CurrencyDetailsPage({ params }: { params: { id: string } }) {
-  const currency = await getCurrencyDetails(params.id)
-
-  if (!currency) {
-    notFound()
+  if (error || !currency) {
+    return (
+      <div className="space-y-4">
+        <div className="text-center text-destructive">
+          <p>{error || "Currency not found."}</p>
+        </div>
+        <div className="flex justify-center">
+          <Button variant="outline" onClick={() => router.push("/currencies")}>Back to Currencies</Button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -37,7 +89,7 @@ export default async function CurrencyDetailsPage({ params }: { params: { id: st
         <h1 className="text-3xl font-bold">
           {currency.name} ({currency.code})
         </h1>
-        <Link href={`/currencies/${params.id}/edit`}>
+        <Link href={`/currencies/${currencyId}/edit`}>
           <Button>Edit Currency</Button>
         </Link>
       </div>
