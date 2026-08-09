@@ -132,8 +132,6 @@ For automated deployments and database backups via GitHub Actions, set the follo
 - [Node.js](https://nodejs.org/) v18+ and `npm`
 - [Supabase CLI](https://supabase.com/docs/guides/cli) (`npm i -g supabase`)
 - [Terraform](https://www.terraform.io/) v1.9+
-- [AWS CLI](https://aws.amazon.com/cli/) v2+ (for bootstrap script)
-
 
 
 ### Local Development
@@ -169,6 +167,7 @@ For automated deployments and database backups via GitHub Actions, set the follo
 - [Vercel](https://vercel.com/) account.
 - [Supabase](https://supabase.com/) account and organization.
 - [AWS](https://aws.amazon.com/) account with sufficient permissions to create S3 buckets and IAM roles.
+- [AWS CLI](https://aws.amazon.com/cli/) v2+ locally installed (for bootstrap script)
 - [Upstash](https://upstash.com/) account.
 
 ### Setup Terraform Cloud
