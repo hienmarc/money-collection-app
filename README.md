@@ -169,6 +169,10 @@ For automated deployments and database backups via GitHub Actions, set the follo
 
 6. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+The seed data for the database includes a sample account for testing purposes:
+- Email: `test@example.com`
+- Password: `password123`
+
 
 ## Cloud deployment
 
