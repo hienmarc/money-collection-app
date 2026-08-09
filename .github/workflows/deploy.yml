@@ -87,7 +87,14 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_GITHUB_ACTIONS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
-
+      
+      - name: Verify AWS credentials
+        run: |
+          echo "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-<missing>}"
+          echo "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:+present}"
+          echo "AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN:+present}"
+          aws sts get-caller-identity
+      
       - name: Terraform Validate
         run: terraform validate
 
