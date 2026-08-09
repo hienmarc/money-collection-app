@@ -69,7 +69,7 @@ graph TD
 
 ```text
 money-collection-app/
-├── frontend/           # Next.js 14+ web app (App Router, Tailwind CSS, Radix UI, Chart.js)
+├── frontend/           # Next.js 14+ web app (App Router, Tailwind CSS, TypeScript, shadcn/ui)
 ├── supabase/           # PostgreSQL migrations, schema, and Supabase config
 ├── terraform/          # Infrastructure as Code (Supabase, Vercel, Upstash, AWS)
 │   └── bootstrap/      # AWS IAM OIDC bootstrap resources for GitHub Actions
@@ -150,17 +150,7 @@ For automated deployments and database backups via GitHub Actions, set the follo
    supabase start
    ```
 
-3. Setup environment variables for local development. Create a `.env.local` file in the `frontend/` directory with the following content:
-
-   ```bash
-   NEXT_PUBLIC_SUPABASE_URL=<your-supabase-url>
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-supabase-anon-key>
-   NUMISTA_API_KEY=<your-numista-api-key>
-   EXCHANGERATES_API_KEY=<your-exchange-rates-api-key>
-   REST_COUNTRIES_API_KEY=<your-rest-countries-api-key>
-   UPSTASH_REDIS_REST_URL=<your-upstash-redis-rest-url>
-   UPSTASH_REDIS_REST_TOKEN=<your-upstash-redis-rest-token>
-   ```
+3. Setup environment variables for local development. Create a `.env.local` file in the `frontend/` directory with the required variables (see [Environment Variables & Secrets](#environment-variables--secrets) section above).
 
 4. **Run the frontend app:**
    ```bash
@@ -172,7 +162,14 @@ For automated deployments and database backups via GitHub Actions, set the follo
 5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 
-## Deployment
+## Cloud deployment
+
+### Prerequisites
+- [Terraform Cloud](https://app.terraform.io/) account.
+- [Vercel](https://vercel.com/) account.
+- [Supabase](https://supabase.com/) account and organization.
+- [AWS](https://aws.amazon.com/) account with sufficient permissions to create S3 buckets and IAM roles.
+- [Upstash](https://upstash.com/) account.
 
 ### Setup Terraform Cloud
 
