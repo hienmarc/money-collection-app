@@ -35,7 +35,7 @@ export default function LoginPage() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -45,6 +45,10 @@ export default function LoginPage() {
     if (error) {
       toast({ title: 'Sign Up Failed', description: error.message, variant: 'destructive' })
       setLoading(false)
+    } else if (data.session) {
+      toast({ title: 'Success', description: 'Account created! Logging you in...' })
+      router.push('/')
+      router.refresh()
     } else {
       toast({ title: 'Success', description: 'Check your email to confirm your account!' })
       setLoading(false)
@@ -120,10 +124,13 @@ export default function LoginPage() {
                   <Input
                     id="signup-password"
                     type="password"
+                    placeholder="At least 6 characters"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    minLength={6}
                     required
                   />
+                  <p className="text-xs text-muted-foreground">Must be at least 6 characters</p>
                 </div>
                 <Button className="w-full" type="submit" disabled={loading}>
                   {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Create Account'}
