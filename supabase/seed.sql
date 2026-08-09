@@ -2,7 +2,7 @@
 -- Supabase Local Seed File: Test Users & Sample Numismatic Data
 -- =============================================================================
 
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
 
 -- Cleanup any existing non-test accounts
 DELETE FROM auth.identities WHERE email != 'test@example.com';
@@ -37,7 +37,7 @@ INSERT INTO auth.users (
   'authenticated',
   'authenticated',
   'test@example.com',
-  crypt('password123', gen_salt('bf')),
+  extensions.crypt('password123', extensions.gen_salt('bf')),
   now(),
   now(),
   now(),
@@ -50,7 +50,7 @@ INSERT INTO auth.users (
   '',
   ''
 ) ON CONFLICT (id) DO UPDATE SET
-  encrypted_password = crypt('password123', gen_salt('bf')),
+  encrypted_password = extensions.crypt('password123', extensions.gen_salt('bf')),
   email_confirmed_at = now();
 
 INSERT INTO auth.identities (

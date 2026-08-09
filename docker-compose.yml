@@ -1,0 +1,19 @@
+version: '3'
+name: mca-local-redis
+services:
+  redis:
+    image: redis
+    container_name: mca-local-redis-db
+    ports:
+      - '6379:6379'
+  serverless-redis-http:
+    image: hiett/serverless-redis-http:latest
+    container_name: mca-local-redis
+    ports:
+      - '8079:80'
+    environment:
+      SRH_MODE: env
+      SRH_TOKEN: local_redis_token
+      SRH_CONNECTION_STRING: 'redis://redis:6379'
+    depends_on:
+      - redis

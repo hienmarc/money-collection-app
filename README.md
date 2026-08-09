@@ -148,14 +148,15 @@ For automated deployments and database backups via GitHub Actions, set the follo
    supabase start
    ```
 
-3. **Start local Redis ([serverless-redis-http](https://github.com/hiett/serverless-redis-http)):**
+   PostgreSQL will be available at `postgres://postgres:postgres@localhost:54322/postgres` for local development.
+
+3. **Start local Redis:**
+   Still in the `supabase/` directory, run the following command to start the bundled serverless Redis instance:
    ```bash
-   docker run -d --name local-redis \
-     -p 8079:80 \
-     -e SRH_TOKEN=local_redis_token \
-     hiett/serverless-redis-http:latest
+   docker compose up -d
    ```
-   > `serverless-redis-http` bundles its own Redis instance — no separate Redis container needed. It exposes an Upstash-compatible REST API on port `8079`, so the app code requires no changes between local and production.
+
+   Redis will be available at `redis://localhost:6379` for local development.
 
 4. Setup environment variables for local development. Create a `.env.local` file in the `frontend/` directory with the required variables (see [Environment Variables & Secrets](#environment-variables--secrets) section above).
 
