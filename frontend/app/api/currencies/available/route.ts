@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/utils/supabase/server"
 
 export async function GET() {
-  const supabase = createClient()
+  const supabase = await createClient()
   try {
     // Fetch all countries with their currencies from REST Countries API using v5 pagination
     let allCountries: any[] = []

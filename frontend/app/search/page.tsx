@@ -28,8 +28,8 @@ async function searchAll(query: string) {
   }
 }
 
-export default async function SearchPage({ searchParams }: { searchParams: { q: string } }) {
-  const query = searchParams.q
+export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q: string }> }) {
+  const { q: query } = await searchParams
 
   if (!query) {
     notFound()
