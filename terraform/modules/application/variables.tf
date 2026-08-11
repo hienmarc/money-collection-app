@@ -10,8 +10,6 @@ variable "environment" {
 
 variable "github_repo" { type = string }
 variable "aws_resource_prefix" { type = string }
-variable "redis_database_name" { type = string }
-variable "redis_region" { type = string }
 variable "supabase_project_name" { type = string }
 variable "supabase_organization_id" { type = string }
 variable "supabase_database_password" {
@@ -19,7 +17,12 @@ variable "supabase_database_password" {
   sensitive = true
 }
 variable "supabase_region" { type = string }
-variable "vercel_project_name" { type = string }
+variable "vercel_project_id" { type = string }
+variable "redis_rest_url" { type = string }
+variable "redis_rest_token" {
+  type      = string
+  sensitive = true
+}
 variable "vercel_project_directory" {
   type    = string
   default = "../../../frontend"

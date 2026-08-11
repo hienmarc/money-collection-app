@@ -37,7 +37,12 @@ terraform {
 
 data "tfe_outputs" "bootstrap" {
   organization = "money-collection-app-org"
-  workspace    = "money-collection-app-bootstrap"
+  workspace    = "bootstrap"
+}
+
+data "tfe_outputs" "shared" {
+  organization = "money-collection-app-org"
+  workspace    = "shared"
 }
 
 provider "supabase" {
@@ -72,13 +77,13 @@ module "application" {
   environment                = "dev"
   github_repo                = var.github_repo
   aws_resource_prefix        = var.aws_resource_prefix
-  redis_database_name        = var.redis_database_name
-  redis_region               = var.redis_region
   supabase_project_name      = var.supabase_project_name
   supabase_organization_id   = var.supabase_organization_id
   supabase_database_password = var.supabase_database_password
   supabase_region            = var.supabase_region
-  vercel_project_name        = var.vercel_project_name
+  vercel_project_id          = data.tfe_outputs.shared.values.vercel_project_id
+  redis_rest_url             = data.tfe_outputs.shared.values.redis_rest_url
+  redis_rest_token           = data.tfe_outputs.shared.values.redis_rest_token
   numista_api_key            = var.numista_api_key
   exchangerates_api_key      = var.exchangerates_api_key
   rest_countries_api_key     = var.rest_countries_api_key

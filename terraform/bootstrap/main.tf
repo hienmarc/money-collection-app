@@ -2,7 +2,7 @@ terraform {
   cloud {
     organization = "money-collection-app-org"
     workspaces {
-      name = "money-collection-app-bootstrap"
+      name = "bootstrap"
     }
   }
 

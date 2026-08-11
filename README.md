@@ -192,7 +192,7 @@ You must first configure Terraform Cloud with the following steps:
 2. Create three workspaces:
 - `dev` for `terraform/environments/dev`.
 - `prod` for `terraform/environments/prod`.
-- `money-collection-app-bootstrap` for the bootstrap module.
+- `bootstrap` for the bootstrap module.
 
 ### Bootstrap AWS OIDC for GitHub Actions
 

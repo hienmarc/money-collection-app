@@ -75,7 +75,7 @@ data "aws_iam_policy_document" "mca_db_backup_assume_role" {
 }
 
 resource "aws_iam_role" "mca_db_backup_role" {
-  name               = "${var.aws_resource_prefix}-db-backup-publish"
+  name               = "${var.aws_resource_prefix}-db-backup-publish-${var.environment}"
   assume_role_policy = data.aws_iam_policy_document.mca_db_backup_assume_role.json
 }
 
@@ -94,89 +94,34 @@ data "aws_iam_policy_document" "mca_db_backup_s3_publish" {
 }
 
 resource "aws_iam_role_policy" "mca_db_backup_s3_publish" {
-  name   = "mca-db-backup-s3-publish"
+  name   = "mca-db-backup-s3-publish-${var.environment}"
   role   = aws_iam_role.mca_db_backup_role.id
   policy = data.aws_iam_policy_document.mca_db_backup_s3_publish.json
-}
-
-resource "upstash_redis_database" "money_collection_app_redis" {
-  database_name  = var.redis_database_name
-  region         = "global"
-  primary_region = var.redis_region
-  tls            = true
-  eviction       = true
-}
-
-resource "vercel_project" "money_collection_app_project" {
-  name      = var.vercel_project_name
-  framework = "nextjs"
 }
 
 data "vercel_project_directory" "money_collection_app_directory" {
   path = var.vercel_project_directory
 }
 
-resource "vercel_project_environment_variables" "money_collection_app_env_vars" {
-  project_id = vercel_project.money_collection_app_project.id
+resource "vercel_project_environment_variable" "application" {
+  for_each = local.vercel_environment_variables
 
-  depends_on = [
-    upstash_redis_database.money_collection_app_redis,
-    supabase_project.money_collection_app_project,
-  ]
+  project_id = var.vercel_project_id
+  key        = each.key
+  value      = each.value.value
+  target     = [local.vercel_target]
+  sensitive  = each.value.sensitive
 
-  variables = [
-    {
-      key       = "NEXT_PUBLIC_SUPABASE_URL"
-      value     = "https://${supabase_project.money_collection_app_project.id}.supabase.co"
-      target    = [local.vercel_target]
-      sensitive = false
-    },
-    {
-      key       = "NEXT_PUBLIC_SUPABASE_ANON_KEY"
-      value     = data.supabase_apikeys.money_collection_app_supabase_apikeys.anon_key
-      target    = [local.vercel_target]
-      sensitive = false
-    },
-    {
-      key       = "NUMISTA_API_KEY"
-      value     = var.numista_api_key
-      target    = [local.vercel_target]
-      sensitive = true
-    },
-    {
-      key       = "EXCHANGERATES_API_KEY"
-      value     = var.exchangerates_api_key
-      target    = [local.vercel_target]
-      sensitive = true
-    },
-    {
-      key       = "REST_COUNTRIES_API_KEY"
-      value     = var.rest_countries_api_key
-      target    = [local.vercel_target]
-      sensitive = true
-    },
-    {
-      key       = "UPSTASH_REDIS_REST_URL"
-      value     = "https://${upstash_redis_database.money_collection_app_redis.endpoint}"
-      target    = [local.vercel_target]
-      sensitive = false
-    },
-    {
-      key       = "UPSTASH_REDIS_REST_TOKEN"
-      value     = upstash_redis_database.money_collection_app_redis.rest_token
-      target    = [local.vercel_target]
-      sensitive = true
-    },
-  ]
+  depends_on = [supabase_project.money_collection_app_project]
 }
 
 resource "time_sleep" "wait_for_env_vars" {
-  depends_on      = [vercel_project_environment_variables.money_collection_app_env_vars]
+  depends_on      = [vercel_project_environment_variable.application]
   create_duration = "10s"
 }
 
 resource "vercel_deployment" "money_collection_app_deployment" {
-  project_id  = vercel_project.money_collection_app_project.id
+  project_id  = var.vercel_project_id
   files       = data.vercel_project_directory.money_collection_app_directory.files
   path_prefix = var.vercel_project_directory
   production  = var.environment == "prod"
