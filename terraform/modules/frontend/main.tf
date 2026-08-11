@@ -32,5 +32,5 @@ resource "vercel_deployment" "application" {
   files       = data.vercel_project_directory.application.files
   path_prefix = var.project_directory
   production  = var.environment == "prod"
-  depends_on  = [time_sleep.wait_for_environment_variables]
+  depends_on  = [time_sleep.wait_for_environment_variables, vercel_project_environment_variable.application]
 }
