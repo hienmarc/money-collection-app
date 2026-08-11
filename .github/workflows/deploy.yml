@@ -208,8 +208,9 @@ jobs:
         if: github.ref_name != 'main'
         run: |
           PGPASSWORD="$SUPABASE_DB_PASSWORD" psql \
-            -h "db.$SUPABASE_PROJECT_ID.supabase.co" \
-            -U postgres \
+            -h "aws-0-${{ vars.SUPABASE_REGION }}.pooler.supabase.com" \
+            -U "postgres.$SUPABASE_PROJECT_ID" \
+            -p 5432 \
             -d postgres \
             -v ON_ERROR_STOP=1 \
             -f supabase/seed.sql
