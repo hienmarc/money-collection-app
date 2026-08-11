@@ -5,7 +5,6 @@ on:
     branches:
       - dev
       - main
-      - actions-tests
     paths:
       - "**.tf"
       - "supabase/**"
@@ -21,8 +20,78 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  detect-shared-changes:
+    # Job to detect changes in shared Terraform modules to apply
+    # shared infrastructure before environment-specific infrastructure.
+    name: Detect Shared Terraform Module Changes
+    runs-on: ubuntu-latest
+    outputs:
+      shared: ${{ steps.filter.outputs.shared }}
+      application: ${{ steps.filter.outputs.application }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect changed areas
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            shared:
+              - 'terraform/environments/shared/**'
+              - 'terraform/modules/shared/**'
+            
+
+  terraform-shared:
+    name: Terraform Apply (shared)
+    needs: detect-shared-changes
+    if: needs.detect-shared-changes.outputs.shared == 'true'
+    runs-on: ubuntu-latest
+    env:
+      TF_IN_AUTOMATION: "true"
+      TF_INPUT: "false"
+      TF_WORKING_DIR: ./terraform/environments/shared
+      TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
+      TFE_TOKEN: ${{ secrets.TF_API_TOKEN }}
+      TF_VAR_upstash_email: ${{ vars.UPSTASH_EMAIL }}
+      TF_VAR_upstash_api_key: ${{ secrets.UPSTASH_API_KEY }}
+      TF_VAR_redis_database_name: ${{ vars.REDIS_DATABASE_NAME }}
+      TF_VAR_redis_region: ${{ vars.REDIS_REGION }}
+      TF_VAR_vercel_api_token: ${{ secrets.VERCEL_API_TOKEN }}
+      TF_VAR_vercel_project_name: ${{ vars.VERCEL_PROJECT_NAME }}
+    defaults:
+      run:
+        working-directory: ${{ env.TF_WORKING_DIR }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.1"
+
+      - name: Terraform Init
+        run: terraform init -input=false
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -input=false -out=tfplan
+
+      - name: Terraform Apply
+        run: terraform apply -input=false -auto-approve tfplan
+
   terraform:
-    name: Terraform Apply
+    name: Terraform Apply (environment)
+    needs: [detect-shared-changes, terraform-shared]
+    # Only run this job if either the shared infrastructure did not change 
+    # or the shared Terraform apply was successful.
+    if: >-
+      ${{always() &&
+        (needs.detect-shared-changes.outputs.shared != 'true' ||
+         needs.terraform-shared.result == 'success')}}
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name == 'main' && 'prod' || 'dev' }} 
 
@@ -32,16 +101,13 @@ jobs:
     env:
       TF_IN_AUTOMATION: "true"
       TF_INPUT: "false"
-      TF_WORKING_DIR: ./terraform
+      TF_WORKING_DIR: ./terraform/environments/${{ github.ref_name == 'main' && 'prod' || 'dev' }}
       # TF_TOKEN_ is used for Terraform Cloud authentication to save state in a remote workspace.
       # app_terraform_io is from the Terraform Cloud hostname (app.terraform.io).
       TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
-      TF_CLOUD_ORGANIZATION: money-collection-app-org
-      TF_WORKSPACE: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
       TFE_TOKEN: ${{ secrets.TF_API_TOKEN }}
 
       # TF_VAR_ prefix directly maps env variable to Terraform variable
-      TF_VAR_deployment_environment: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
       TF_VAR_github_repo: "${{ github.repository_owner }}@${{ github.repository_owner_id }}/${{ github.event.repository.name }}@${{ github.repository_id }}"
       ## AWS variables
       TF_VAR_aws_region: ${{ vars.AWS_REGION }}
@@ -90,9 +156,6 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
-      - name: Debug
-        run: echo ${{ env.TF_VAR_aws_resource_prefix }}
-
       - name: Terraform Plan
         id: plan
         run: terraform plan -input=false -out=tfplan
@@ -138,3 +201,14 @@ jobs:
 
       - name: Push database migrations
         run: supabase db push
+
+      - name: Run seed script (dev only)
+        if: github.ref_name != 'main'
+        run: |
+          PGPASSWORD="$SUPABASE_DB_PASSWORD" psql \
+            -h "aws-0-${{ vars.SUPABASE_REGION }}.pooler.supabase.com" \
+            -U "postgres.$SUPABASE_PROJECT_ID" \
+            -p 5432 \
+            -d postgres \
+            -v ON_ERROR_STOP=1 \
+            -f supabase/seed.sql

@@ -29,7 +29,6 @@ provider "registry.terraform.io/hashicorp/tfe" {
   version     = "0.79.0"
   constraints = "~> 0.55"
   hashes = [
-    "h1:J38XWgIpzM2Oam2VqzJ4Ls3HLhSXQoGvlgdnswxsLss=",
     "h1:teVdOezI465bLv/C8vhyvEoC/0QSFwsOo00skZNn/NU=",
     "zh:212a4b646f5340362f8f860c4446f6430a0203956f5943eb6ebe35d0d8d6ea7c",
     "zh:3209e7a5ed101f7293de75488ee7ce01c49b588cfe7fa4c59712d9ac9ec0e1e7",
@@ -95,7 +94,6 @@ provider "registry.terraform.io/upstash/upstash" {
   constraints = "~> 1.5"
   hashes = [
     "h1:PfqvLUmRUHWGFVxMGtiQyby6Xt+NDMnKqO6dgpaGOsk=",
-    "h1:sLYNR2A0QEfGHB9qtfY9tEFtodL3nXoYacQV/c7eNrs=",
     "zh:109bbfca01acc2887a2ccce09036b21c1837cb04f843dd6d8eb93fd1392409d0",
     "zh:279a6313ce37de51ba926fd0bf890127671b726df9328c2d29b86a99ed4df39b",
     "zh:2bd198f8342077a7b8066c0206962618327a2c0f413d4659074b2f9962a0db3c",
@@ -115,7 +113,7 @@ provider "registry.terraform.io/upstash/upstash" {
 
 provider "registry.terraform.io/vercel/vercel" {
   version     = "5.10.0"
-  constraints = ">= 4.8.0"
+  constraints = "5.10.0"
   hashes = [
     "h1:1i7nMcyCpalSy+s6C+pZshudewluHtkUq+lID8Ikpa4=",
     "zh:0bba268730d5cc2a85298d094f59f0c138914e1278e487949dfe6a16c8bf0114",
