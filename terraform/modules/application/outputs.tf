@@ -1,7 +1,7 @@
 output "supabase_project_id" {
-  value = supabase_project.money_collection_app_project.id
+  value = module.database.project_id
 }
 
 output "db_backup_bucket" {
-  value = aws_s3_bucket.mca_db_backup_bucket.bucket
+  value = module.backup.bucket_name
 }

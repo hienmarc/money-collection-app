@@ -6,7 +6,7 @@ terraform {
 
   required_providers {
     upstash = { source = "upstash/upstash", version = "~> 1.5" }
-    vercel  = { source = "vercel/vercel", version = "5.10.0" }
+    vercel  = { source = "vercel/vercel", version = ">= 4.8" }
   }
 }
 

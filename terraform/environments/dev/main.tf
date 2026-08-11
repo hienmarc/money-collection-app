@@ -18,7 +18,7 @@ terraform {
     }
     vercel = {
       source  = "vercel/vercel"
-      version = "5.10.0"
+      version = ">= 4.8"
     }
     aws = {
       source  = "hashicorp/aws"
