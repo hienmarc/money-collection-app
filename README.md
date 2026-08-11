@@ -189,8 +189,9 @@ The seed data for the database includes a sample account for testing purposes:
 You must first configure Terraform Cloud with the following steps:
 
 1. Create a Terraform Cloud account and organization (e.g., `money-collection-app-org`).
-2. Create three workspaces: 
-- `dev` and `prod` and give them the tag `money-collection-app`.
+2. Create three workspaces:
+- `dev` for `terraform/environments/dev`.
+- `prod` for `terraform/environments/prod`.
 - `money-collection-app-bootstrap` for the bootstrap module.
 
 ### Bootstrap AWS OIDC for GitHub Actions
@@ -213,8 +214,7 @@ In a terminal where you are logged into AWS CLI with sufficient permissions, run
 
 Deployment is fully automated using GitHub Actions workflows:
 
-- **Deployment Pipeline** (`.github/workflows/deploy.yml`): Triggers on pushes to `main` or `dev`. Applies Terraform plans to provision infrastructure and runs `supabase db push` to synchronize database migrations.
+- **Deployment Pipeline** (`.github/workflows/deploy.yml`): Triggers on pushes to `main` or `dev`. It runs the matching explicit Terraform root module (`prod` for `main`, `dev` for `dev`), then runs `supabase db push` to synchronize database migrations.
 - **Database Backup Pipeline** (`.github/workflows/backup-db.yml`): Scheduled or manually triggered workflow that dumps Supabase PostgreSQL data from the production environment and uploads it to AWS S3.
 
 Important : Environment variables must be configured in GitHub Actions secrets and variables for successful deployment and backup operations (see [Environment Variables & Secrets](#environment-variables--secrets) section above).
-
