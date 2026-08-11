@@ -25,7 +25,7 @@ jobs:
   detect-shared-changes:
     # Job to detect changes in shared Terraform modules to apply
     # shared infrastructure before environment-specific infrastructure.
-    name: Detect changes in shared Terraform module
+    name: Detect Shared Terraform Module Changes
     runs-on: ubuntu-latest
     outputs:
       shared: ${{ steps.filter.outputs.shared }}
@@ -203,3 +203,13 @@ jobs:
 
       - name: Push database migrations
         run: supabase db push
+
+      - name: Run seed script (dev only)
+        if: github.ref_name != 'main'
+        run: |
+          PGPASSWORD="$SUPABASE_DB_PASSWORD" psql \
+            -h "db.$SUPABASE_PROJECT_ID.supabase.co" \
+            -U postgres \
+            -d postgres \
+            -v ON_ERROR_STOP=1 \
+            -f supabase/seed.sql
