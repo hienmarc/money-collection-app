@@ -4,10 +4,6 @@
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
 
--- Cleanup any existing non-test accounts
-DELETE FROM auth.identities WHERE email != 'test@example.com';
-DELETE FROM auth.users WHERE email != 'test@example.com';
-
 -- -----------------------------------------------------------------------------
 -- 1. Test User Account (Password: password123)
 -- -----------------------------------------------------------------------------
