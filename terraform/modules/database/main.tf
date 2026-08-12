@@ -19,5 +19,5 @@ resource "supabase_project" "money_collection_app_project_unprotected" {
 }
 
 data "supabase_apikeys" "money_collection_app" {
-  project_ref = supabase_project.money_collection_app_project.id
+  project_ref = coalesce(supabase_project.money_collection_app_project_protected[0].ref, supabase_project.money_collection_app_project_unprotected[0].ref)
 }
