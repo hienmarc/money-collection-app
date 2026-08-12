@@ -1,9 +1,10 @@
 module "database" {
-  source            = "../database"
-  organization_id   = var.supabase_organization_id
-  project_name      = var.supabase_project_name
-  database_password = var.supabase_database_password
-  region            = var.supabase_region
+  source             = "../database"
+  prevent_db_destroy = var.environment == "prod" ? true : false
+  organization_id    = var.supabase_organization_id
+  project_name       = var.supabase_project_name
+  database_password  = var.supabase_database_password
+  region             = var.supabase_region
 }
 
 module "backup" {
