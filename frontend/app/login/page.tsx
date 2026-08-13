@@ -6,7 +6,7 @@ import { createClient } from '@/utils/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from '@/components/ui/use-toast'
 import { Loader2, Mail } from 'lucide-react'
@@ -15,15 +15,21 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [loginError, setLoginError] = useState('')
+  const [signupError, setSignupError] = useState('')
+  const [signupSuccess, setSignupSuccess] = useState('')
   const router = useRouter()
   const supabase = createClient()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setLoginError('')
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
-      toast({ title: 'Login Failed', description: error.message, variant: 'destructive' })
+      const message = error.message || 'Invalid email or password.'
+      setLoginError(message)
+      toast({ title: 'Login Failed', description: message, variant: 'destructive' })
       setLoading(false)
     } else {
       toast({ title: 'Success', description: 'Logged in successfully!' })
@@ -35,6 +41,9 @@ export default function LoginPage() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setSignupError('')
+    setSignupSuccess('')
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -42,17 +51,26 @@ export default function LoginPage() {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     })
+
     if (error) {
-      toast({ title: 'Sign Up Failed', description: error.message, variant: 'destructive' })
+      const message = error.message || 'An account with this email already exists.'
+      setSignupError(message)
+      toast({ title: 'Sign Up Failed', description: message, variant: 'destructive' })
       setLoading(false)
-    } else if (data.session) {
+      return
+    }
+
+    if (data.session) {
       toast({ title: 'Success', description: 'Account created! Logging you in...' })
       router.push('/')
       router.refresh()
-    } else {
-      toast({ title: 'Success', description: 'Check your email to confirm your account!' })
-      setLoading(false)
+      return
     }
+
+    const successMessage = 'Account created successfully! Please check your email to confirm your account.'
+    setSignupSuccess(successMessage)
+    toast({ title: 'Success', description: successMessage })
+    setLoading(false)
   }
 
   const handleOAuthLogin = async (provider: 'github' | 'google') => {
@@ -79,6 +97,11 @@ export default function LoginPage() {
             </TabsList>
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
+                {loginError && (
+                  <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600" role="alert">
+                    {loginError}
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -86,7 +109,10 @@ export default function LoginPage() {
                     type="email"
                     placeholder="m@example.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value)
+                      if (loginError) setLoginError('')
+                    }}
                     required
                   />
                 </div>
@@ -96,7 +122,10 @@ export default function LoginPage() {
                     id="password"
                     type="password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value)
+                      if (loginError) setLoginError('')
+                    }}
                     required
                   />
                 </div>
@@ -108,6 +137,16 @@ export default function LoginPage() {
             </TabsContent>
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
+                {signupError && (
+                  <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600" role="alert">
+                    {signupError}
+                  </div>
+                )}
+                {signupSuccess && (
+                  <div className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700" role="status">
+                    {signupSuccess}
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
                   <Input
@@ -115,7 +154,11 @@ export default function LoginPage() {
                     type="email"
                     placeholder="m@example.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value)
+                      if (signupError) setSignupError('')
+                      if (signupSuccess) setSignupSuccess('')
+                    }}
                     required
                   />
                 </div>
@@ -126,7 +169,11 @@ export default function LoginPage() {
                     type="password"
                     placeholder="At least 6 characters"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value)
+                      if (signupError) setSignupError('')
+                      if (signupSuccess) setSignupSuccess('')
+                    }}
                     minLength={6}
                     required
                   />
