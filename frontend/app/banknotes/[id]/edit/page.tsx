@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState, useEffect, use } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,6 +24,14 @@ export default function EditBanknotePage({ params }: { params: Promise<{ id: str
   const router = useRouter()
   const { id: banknoteId } = use(params)
   const { banknote, isLoading: isLoadingBanknote, updateBanknote, isUpdating } = useBanknote(banknoteId)
+
+  const { data: currentUser, isLoading: isLoadingUser } = useQuery({
+    queryKey: ["currentAuthUser"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      return user
+    },
+  })
 
   const [formData, setFormData] = useState({
     code: "",
@@ -143,11 +152,25 @@ export default function EditBanknotePage({ params }: { params: Promise<{ id: str
     return true
   }
 
-  if (isLoadingBanknote) {
+  if (isLoadingBanknote || isLoadingUser) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
+    )
+  }
+
+  if (banknote && currentUser && banknote.ownerid && banknote.ownerid !== currentUser.id) {
+    return (
+      <Card className="max-w-md mx-auto p-8 text-center space-y-4 my-12">
+        <CardTitle className="text-2xl font-bold">Unauthorized</CardTitle>
+        <p className="text-sm text-muted-foreground">
+          You do not have permission to edit this banknote because it belongs to another collector.
+        </p>
+        <Button asChild className="mt-4">
+          <Link href={`/banknotes/${banknoteId}`}>View Banknote Details</Link>
+        </Button>
+      </Card>
     )
   }
 

@@ -20,6 +20,8 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { RelatedBanknotes } from "@/components/RelatedBanknotes"
 import { useBanknote, useBanknotes } from "@/hooks/use-banknotes"
+import { createClient } from "@/utils/supabase/client"
+import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 import {
   Dialog,
@@ -32,10 +34,21 @@ import {
 
 export default function BanknoteDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
+  const supabase = createClient()
   const { id: banknoteId } = use(params)
   const { banknote, isLoading, error } = useBanknote(banknoteId)
   const { deleteBanknote, isDeleting } = useBanknotes()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+
+  const { data: currentUser } = useQuery({
+    queryKey: ["currentAuthUser"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      return user
+    },
+  })
+
+  const isOwner = !!(currentUser && banknote && banknote.ownerid === currentUser.id)
 
   if (isLoading) {
     return (
@@ -68,18 +81,20 @@ export default function BanknoteDetailPage({ params }: { params: Promise<{ id: s
           <ArrowLeft className="mr-2 h-4 w-4" />
           <span>Back to Banknotes</span>
         </Link>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/banknotes/${banknoteId}/edit`}>
-              <Edit className="mr-2 h-4 w-4" />
-              Edit
-            </Link>
-          </Button>
-          <Button variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)}>
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete
-          </Button>
-        </div>
+        {isOwner && (
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/banknotes/${banknoteId}/edit`}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+              </Link>
+            </Button>
+            <Button variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)}>
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Main content */}

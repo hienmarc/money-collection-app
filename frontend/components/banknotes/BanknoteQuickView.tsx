@@ -10,6 +10,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Banknote } from "@/lib/types"
+import { createClient } from "@/utils/supabase/client"
+import { useQuery } from "@tanstack/react-query"
 
 interface BanknoteQuickViewProps {
   banknote: Banknote | null
@@ -19,6 +21,18 @@ interface BanknoteQuickViewProps {
 
 export function BanknoteQuickView({ banknote, open, onOpenChange }: BanknoteQuickViewProps) {
   const router = useRouter()
+  const supabase = createClient()
+
+  const { data: currentUser } = useQuery({
+    queryKey: ["currentAuthUser"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      return user
+    },
+  })
+
+  const isOwner = !!(currentUser && banknote && banknote.ownerid === currentUser.id)
+
   if (!banknote) return null
 
   return (
@@ -90,16 +104,18 @@ export function BanknoteQuickView({ banknote, open, onOpenChange }: BanknoteQuic
           </div>
         </div>
         <DialogFooter>
-          <div className="flex justify-between w-full">
-            <Button
-              variant="outline"
-              onClick={() => {
-                onOpenChange(false)
-                router.push(`/banknotes/${banknote.banknoteid}/edit`)
-              }}
-            >
-              Edit
-            </Button>
+          <div className="flex justify-between w-full items-center">
+            {isOwner ? (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  onOpenChange(false)
+                  router.push(`/banknotes/${banknote.banknoteid}/edit`)
+                }}
+              >
+                Edit
+              </Button>
+            ) : <div />}
             <Link href={`/banknotes/${banknote.banknoteid}`}>
               <Button>View Full Details</Button>
             </Link>

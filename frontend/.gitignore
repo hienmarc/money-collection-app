@@ -20,8 +20,10 @@ yarn-error.log*
 # vercel
 .vercel
 
-# gemini
+# gemini / agents
 GEMINI.md
+CLAUDE.md
+AGENTS.md
 
 # typescript
 *.tsbuildinfo
