@@ -12,6 +12,7 @@ import {
   Settings,
   Search,
   DollarSign,
+  Users,
 } from "lucide-react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 
@@ -32,6 +33,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
     { name: "Collection Value", href: "/collection-value", icon: DollarSign },
     { name: "Currencies", href: "/currencies", icon: Coins },
     { name: "Countries", href: "/countries", icon: Globe },
+    { name: "Collectors", href: "/users", icon: Users },
   ]
 
   useEffect(() => {

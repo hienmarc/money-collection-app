@@ -13,7 +13,12 @@ export function useDashboardData(timeRange: string, currencyFilter: string) {
   const { data: rawBanknotes = [], isLoading: isLoadingBanknotes } = useQuery({
     queryKey: ["banknotes-dashboard"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("banknotes").select("*, currencies(code, name)")
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return []
+      const { data, error } = await supabase
+        .from("banknotes")
+        .select("*, currencies(code, name)")
+        .eq("ownerid", user.id)
       if (error) throw error
       return data as Banknote[]
     },

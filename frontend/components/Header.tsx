@@ -91,6 +91,12 @@ const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
+                  <Link href={`/users/${user.id}`}>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>My Profile</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link href="/settings">
                     <User className="mr-2 h-4 w-4" />
                     <span>Settings</span>

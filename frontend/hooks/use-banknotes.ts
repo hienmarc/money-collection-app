@@ -31,11 +31,16 @@ export function useBanknotes() {
   const { data: banknotes = [], isLoading: isLoadingBanknotes, refetch: refetchBanknotes, isRefetching } = useQuery({
     queryKey: ["banknotes"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("banknotes").select(`
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return []
+      const { data, error } = await supabase
+        .from("banknotes")
+        .select(`
           *,
           currencies(code, name),
           storageunits(name)
         `)
+        .eq("ownerid", user.id)
       if (error) throw error
       return (data || []) as Banknote[]
     },
