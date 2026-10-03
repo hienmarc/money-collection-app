@@ -2,9 +2,10 @@
 
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react"
 import { useRouter } from "next/navigation"
-import { AlertCircle, Camera, CheckCircle2, Clock3, Loader2, Plus, Search, Trash2, UploadCloud } from "lucide-react"
+import { AlertCircle, Camera, CheckCircle2, Clock3, Loader2, Search, Trash2, UploadCloud } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { NumistaBanknoteCard } from "@/components/NumistaBanknoteCard"
 import { useDeleteImageSearch, useImageSearchJobs, useUploadImageSearch } from "@/hooks/use-image-search"
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024
@@ -199,40 +200,22 @@ export default function ImageSearchPage() {
                     <p className="text-sm text-muted-foreground">No matching banknotes found in Numista.</p>
                   )}
                   {job.results.length > 0 && (
-                    <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                       {job.results.map((result, index) => (
-                        <div key={result.id ?? index} className="flex gap-3 rounded-md border p-3">
-                          {result.obverse_thumbnail && (
-                            <img src={result.obverse_thumbnail} alt="" className="h-16 w-20 shrink-0 object-contain" />
-                          )}
-                          <div className="flex min-w-0 flex-1 flex-col items-start">
-                            <p className="font-medium">{result.title || "Banknote match"}</p>
-                            <p className="text-sm text-muted-foreground">{result.issuer?.name}</p>
-                            <p className="mb-3 text-sm text-muted-foreground">
-                              {[result.value?.text, result.min_year, result.max_year]
-                                .filter((value) => value !== undefined && value !== "")
-                                .join(" · ")}
-                            </p>
-                            {result.id != null && (
-                              <Button
-                                size="sm"
-                                className="mt-auto"
-                                onClick={() => {
-                                  const params = new URLSearchParams({
-                                    numista_id: String(result.id),
-                                    return_url: "/image-search",
-                                  })
-                                  const serialNumber = job.identification?.serial_number
-                                  if (serialNumber) params.set("serial_number", serialNumber)
-                                  router.push(`/banknotes/new?${params.toString()}`)
-                                }}
-                              >
-                                <Plus className="mr-2 h-4 w-4" />
-                                Add to collection
-                              </Button>
-                            )}
-                          </div>
-                        </div>
+                        <NumistaBanknoteCard
+                          key={result.id ?? index}
+                          banknote={result}
+                          onAddToCollection={() => {
+                            if (result.id == null) return
+                            const params = new URLSearchParams({
+                              numista_id: String(result.id),
+                              return_url: "/image-search",
+                            })
+                            const serialNumber = job.identification?.serial_number
+                            if (serialNumber) params.set("serial_number", serialNumber)
+                            router.push(`/banknotes/new?${params.toString()}`)
+                          }}
+                        />
                       ))}
                     </div>
                   )}
