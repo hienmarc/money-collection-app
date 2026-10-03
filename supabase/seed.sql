@@ -5,7 +5,7 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
 
 -- -----------------------------------------------------------------------------
--- 1. Test User Account (Password: password123)
+-- 1. Test Admin User Account (Password: password123)
 -- -----------------------------------------------------------------------------
 
 -- Account: test@example.com (ID: 00000000-0000-0000-0000-000000000001)
@@ -20,11 +20,12 @@ INSERT INTO auth.users (
   extensions.crypt('password123', extensions.gen_salt('bf')),
   now(), now(), now(),
   '{"provider":"email","providers":["email"]}',
-  '{"full_name":"Test Collector"}',
+  '{"full_name":"Test Admin User"}',
   now(), now(), '', '', '', ''
 ) ON CONFLICT (id) DO UPDATE SET
   encrypted_password = extensions.crypt('password123', extensions.gen_salt('bf')),
-  email_confirmed_at = now();
+  email_confirmed_at = now(),
+  raw_user_meta_data = EXCLUDED.raw_user_meta_data;
 
 INSERT INTO auth.identities (
   id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at
@@ -87,13 +88,14 @@ INSERT INTO auth.identities (
 ) ON CONFLICT (provider, provider_id) DO NOTHING;
 
 -- Profiles
-INSERT INTO public.profiles (id, full_name, is_public) VALUES
-  ('00000000-0000-0000-0000-000000000001', 'Test Collector', true),
-  ('00000000-0000-0000-0000-000000000002', 'Alice Numismatist', true),
-  ('00000000-0000-0000-0000-000000000003', 'Bob Private', false)
+INSERT INTO public.profiles (id, full_name, is_public, is_admin) VALUES
+  ('00000000-0000-0000-0000-000000000001', 'Test Admin User', true, true),
+  ('00000000-0000-0000-0000-000000000002', 'Alice Numismatist', true, false),
+  ('00000000-0000-0000-0000-000000000003', 'Bob Private', false, false)
 ON CONFLICT (id) DO UPDATE SET
   full_name = EXCLUDED.full_name,
-  is_public = EXCLUDED.is_public;
+  is_public = EXCLUDED.is_public,
+  is_admin = EXCLUDED.is_admin;
 
 
 -- -----------------------------------------------------------------------------
@@ -112,13 +114,16 @@ SELECT setval('public.storageunits_storageunitid_seq', (SELECT MAX(storageunitid
 -- 3. Countries & Currencies
 -- -----------------------------------------------------------------------------
 INSERT INTO public.countries (countryid, code, name, continentid) VALUES
-  (1, 'CAN', 'Canada', 1),
-  (2, 'USA', 'United States', 1),
-  (3, 'FRA', 'France', 2),
-  (4, 'JPN', 'Japan', 3),
-  (5, 'CHE', 'Switzerland', 2),
-  (6, 'GBR', 'United Kingdom', 2)
-ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name;
+  (1, 'CA', 'Canada', 1),
+  (2, 'US', 'United States', 1),
+  (3, 'FR', 'France', 2),
+  (4, 'JP', 'Japan', 3),
+  (5, 'CH', 'Switzerland', 2),
+  (6, 'GB', 'United Kingdom', 2)
+ON CONFLICT (countryid) DO UPDATE SET
+  code = EXCLUDED.code,
+  name = EXCLUDED.name,
+  continentid = EXCLUDED.continentid;
 
 SELECT setval('public.countries_countryid_seq', (SELECT MAX(countryid) FROM public.countries));
 

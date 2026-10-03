@@ -37,9 +37,11 @@ import {
 } from "lucide-react"
 import { BanknoteGrade, Currency, StorageUnit } from "@/lib/types"
 import Link from "next/link"
+import { useIsAdmin } from "@/hooks/use-is-admin"
 
 export default function NewBanknotePage() {
   const supabase = createClient()
+  const { isAdmin, error: adminError } = useIsAdmin()
   const router = useRouter()
   const searchParams = useSearchParams()
   const queryClient = useQueryClient()
@@ -204,7 +206,7 @@ export default function NewBanknotePage() {
 
     saveBanknoteMutation.mutate(banknoteToSave, {
       onSuccess: () => {
-        if (currencyNumistaId) {
+        if (currencyNumistaId && isAdmin) {
           updateCurrencyMutation.mutate({ currencyId: formData.currencyid, numistaId: currencyNumistaId })
         }
       },
@@ -249,6 +251,11 @@ export default function NewBanknotePage() {
           Add New Banknote
         </h1>
       </div>
+      {adminError && (
+        <p role="alert" className="mb-4 text-sm text-muted-foreground">
+          Admin access could not be verified. The banknote can still be added, but currency catalog metadata will not be updated.
+        </p>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

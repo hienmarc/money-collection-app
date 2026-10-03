@@ -32,6 +32,7 @@ All underlying cloud infrastructure, including database provisioning, caching la
 - 🌐 **Global Catalog & Search** — Search banknotes across currencies and issuing countries using the Numista catalog.
 - 📊 **Analytics & Valuation Dashboard** — Interactive charts visualizing collection breakdowns by currency, year of issue, grade distribution, and total collection value.
 - 🔐 **Multi-Tenant Security** — Authentication powered by Supabase Auth with Row Level Security policies scoping records to their respective owners.
+- 👥 **User Roles** — Regular users manage their own banknotes and browse shared catalogs; database-designated admins can maintain the shared country and currency catalogs.
 - ⚡ **API Caching Layer** — Serverless Upstash Redis cache in front of external API integrations (Exchange Rates, REST Countries, Numista).
 - 🏗️ **Infrastructure as Code** — Fully automated environment management across Supabase, Upstash, Vercel, and AWS via Terraform.
 - 💾 **Automated DB Backups** — Scheduled GitHub Actions workflow performing PostgreSQL database dumps uploaded to an AWS S3 bucket with 30-day lifecycle expiration.
