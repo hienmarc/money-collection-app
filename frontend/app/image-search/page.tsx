@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react"
-import { AlertCircle, CheckCircle2, Clock3, Loader2, Search, Trash2, UploadCloud } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { AlertCircle, Camera, CheckCircle2, Clock3, Loader2, Plus, Search, Trash2, UploadCloud } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useDeleteImageSearch, useImageSearchJobs, useUploadImageSearch } from "@/hooks/use-image-search"
@@ -14,6 +15,7 @@ function formatDate(value: string) {
 }
 
 export default function ImageSearchPage() {
+  const router = useRouter()
   const [file, setFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState("")
   const [fileError, setFileError] = useState("")
@@ -80,28 +82,42 @@ export default function ImageSearchPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={submit} className="space-y-4">
-            <label
-              htmlFor="banknote-image"
-              className="flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 text-center hover:bg-muted/40"
-            >
+            <div className="flex min-h-36 flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed p-6 text-center">
               {previewUrl ? (
                 <img src={previewUrl} alt="Selected banknote preview" className="max-h-52 max-w-full object-contain" />
               ) : (
                 <>
-                  <UploadCloud className="mb-2 h-8 w-8 text-muted-foreground" />
-                  <span className="font-medium">Choose a JPEG or PNG image</span>
+                  <UploadCloud className="h-8 w-8 text-muted-foreground" />
+                  <span className="font-medium">Choose an image or take a photo</span>
                   <span className="mt-1 text-sm text-muted-foreground">Maximum size: 5 MB</span>
                 </>
               )}
-            </label>
-            <input
-              id="banknote-image"
-              className="sr-only"
-              type="file"
-              accept="image/jpeg,image/png"
-              disabled={upload.isPending}
-              onChange={selectFile}
-            />
+              <div className="flex flex-wrap justify-center gap-2">
+                <label className="inline-flex h-10 cursor-pointer items-center justify-center rounded-md border bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground">
+                  <UploadCloud className="mr-2 h-4 w-4" />
+                  Choose image
+                  <input
+                    className="sr-only"
+                    type="file"
+                    accept="image/jpeg,image/png"
+                    disabled={upload.isPending}
+                    onChange={selectFile}
+                  />
+                </label>
+                <label className="inline-flex h-10 cursor-pointer items-center justify-center rounded-md border bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground">
+                  <Camera className="mr-2 h-4 w-4" />
+                  Take photo
+                  <input
+                    className="sr-only"
+                    type="file"
+                    accept="image/jpeg,image/png"
+                    capture="environment"
+                    disabled={upload.isPending}
+                    onChange={selectFile}
+                  />
+                </label>
+              </div>
+            </div>
             {file && <p className="text-sm text-muted-foreground">{file.name}</p>}
             {fileError && <p role="alert" className="text-sm text-destructive">{fileError}</p>}
             {upload.isError && <p role="alert" className="text-sm text-destructive">{upload.error.message}</p>}
@@ -187,20 +203,34 @@ export default function ImageSearchPage() {
                       {job.results.map((result, index) => (
                         <div key={result.id ?? index} className="flex gap-3 rounded-md border p-3">
                           {result.obverse_thumbnail && (
-                            <img
-                              src={result.obverse_thumbnail}
-                              alt=""
-                              className="h-16 w-20 shrink-0 object-contain"
-                            />
+                            <img src={result.obverse_thumbnail} alt="" className="h-16 w-20 shrink-0 object-contain" />
                           )}
-                          <div className="min-w-0">
+                          <div className="flex min-w-0 flex-1 flex-col items-start">
                             <p className="font-medium">{result.title || "Banknote match"}</p>
                             <p className="text-sm text-muted-foreground">{result.issuer?.name}</p>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="mb-3 text-sm text-muted-foreground">
                               {[result.value?.text, result.min_year, result.max_year]
                                 .filter((value) => value !== undefined && value !== "")
                                 .join(" · ")}
                             </p>
+                            {result.id != null && (
+                              <Button
+                                size="sm"
+                                className="mt-auto"
+                                onClick={() => {
+                                  const params = new URLSearchParams({
+                                    numista_id: String(result.id),
+                                    return_url: "/image-search",
+                                  })
+                                  const serialNumber = job.identification?.serial_number
+                                  if (serialNumber) params.set("serial_number", serialNumber)
+                                  router.push(`/banknotes/new?${params.toString()}`)
+                                }}
+                              >
+                                <Plus className="mr-2 h-4 w-4" />
+                                Add to collection
+                              </Button>
+                            )}
                           </div>
                         </div>
                       ))}
