@@ -14,6 +14,7 @@ import { toast } from "@/components/ui/use-toast"
 import { Coins, Globe, CreditCard, Banknote, Database, Loader2, Search, Plus, Check, X, RefreshCw } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { AdminRouteGuard } from "@/components/AdminRouteGuard"
 
 interface AvailableCurrency {
   code: string
@@ -26,9 +27,18 @@ interface ApiResponse {
   available: AvailableCurrency[]
   existing: number
   total: number
+  error?: string
 }
 
 export default function NewCurrencyPage() {
+  return (
+    <AdminRouteGuard backHref="/currencies">
+      <NewCurrencyForm />
+    </AdminRouteGuard>
+  )
+}
+
+function NewCurrencyForm() {
   const supabase = createClient()
   const router = useRouter()
   const [name, setName] = useState("")
@@ -484,12 +494,10 @@ export default function NewCurrencyPage() {
                     </div>
                   ) : (
                     <MultiSelect
-                      id="countries"
                       options={availableCountries}
                       selected={countries}
                       onChange={setCountries}
                       placeholder="Select countries..."
-                      className="min-h-9"
                     />
                   )}
                 </div>

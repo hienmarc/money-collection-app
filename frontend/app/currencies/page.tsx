@@ -43,6 +43,8 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { toast } from "@/components/ui/use-toast"
 import { useCurrencies, useExchangeRates, CurrencyWithCountries } from "@/hooks/use-currencies"
+import { useIsAdmin } from "@/hooks/use-is-admin"
+import { AdminOnly } from "@/components/AdminRouteGuard"
 
 export default function CurrenciesPage() {
   const { currencies, isLoading, isRefetching, refreshCurrencies, deleteCurrency, bulkDeleteCurrencies } = useCurrencies()
@@ -134,7 +136,7 @@ export default function CurrenciesPage() {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
         <h1 className="text-2xl font-bold">Currencies</h1>
-        <Link href="/currencies/new"><Button><Plus className="mr-2 h-4 w-4" />Add Currency</Button></Link>
+        <AdminOnly><Link href="/currencies/new"><Button><Plus className="mr-2 h-4 w-4" />Add Currency</Button></Link></AdminOnly>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4">
@@ -189,7 +191,7 @@ export default function CurrenciesPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-10"><Checkbox checked={paginatedCurrencies.length > 0 && paginatedCurrencies.every(c => selectedCurrencies.includes(c.currencyid))} onCheckedChange={handleSelectAll} /></TableHead>
+                    <AdminOnly><TableHead className="w-10"><Checkbox checked={paginatedCurrencies.length > 0 && paginatedCurrencies.every(c => selectedCurrencies.includes(c.currencyid))} onCheckedChange={handleSelectAll} /></TableHead></AdminOnly>
                     <TableHead className="cursor-pointer" onClick={() => handleSort("name")}>Name {sortField === "name" && (sortDirection === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
                     <TableHead onClick={() => handleSort("code")}>Code</TableHead>
                     <TableHead>Symbol</TableHead>
@@ -201,7 +203,7 @@ export default function CurrenciesPage() {
                 <TableBody>
                   {paginatedCurrencies.map(c => (
                     <TableRow key={c.currencyid}>
-                      <TableCell><Checkbox checked={selectedCurrencies.includes(c.currencyid)} onCheckedChange={checked => handleSelectCurrency(c.currencyid, !!checked)} /></TableCell>
+                      <AdminOnly><TableCell><Checkbox checked={selectedCurrencies.includes(c.currencyid)} onCheckedChange={checked => handleSelectCurrency(c.currencyid, !!checked)} /></TableCell></AdminOnly>
                       <TableCell><Link href={`/currencies/${c.currencyid}`} className="hover:underline font-medium">{c.name}</Link></TableCell>
                       <TableCell>{c.code}</TableCell>
                       <TableCell>{c.symbol || "-"}</TableCell>
@@ -212,8 +214,8 @@ export default function CurrenciesPage() {
                           <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => setQuickViewCurrency(c)}>Quick View</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => router.push(`/currencies/${c.currencyid}/edit`)}>Edit</DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-600" onClick={() => deleteCurrency(c.currencyid)}>Delete</DropdownMenuItem>
+                            <AdminOnly><DropdownMenuItem onClick={() => router.push(`/currencies/${c.currencyid}/edit`)}>Edit</DropdownMenuItem></AdminOnly>
+                            <AdminOnly><DropdownMenuItem className="text-red-600" onClick={() => deleteCurrency(c.currencyid)}>Delete</DropdownMenuItem></AdminOnly>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -229,17 +231,19 @@ export default function CurrenciesPage() {
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start">
                       <div><h3 className="font-medium underline"><Link href={`/currencies/${c.currencyid}`}>{c.name}</Link></h3><p className="text-sm text-muted-foreground">{c.code} {c.symbol && `(${c.symbol})`}</p></div>
-                      <Checkbox checked={selectedCurrencies.includes(c.currencyid)} onCheckedChange={checked => handleSelectCurrency(c.currencyid, !!checked)} />
+                      <AdminOnly><Checkbox checked={selectedCurrencies.includes(c.currencyid)} onCheckedChange={checked => handleSelectCurrency(c.currencyid, !!checked)} /></AdminOnly>
                     </div>
                     <div className="mt-4 text-sm space-y-1">
                       <div className="flex justify-between"><span>Rate:</span><span>{getExchangeRate(c.code)?.toFixed(4) || "N/A"}</span></div>
                       <div className="flex justify-between"><span>Countries:</span><span className="truncate max-w-[100px]">{c.countries.join(", ")}</span></div>
                     </div>
                   </CardContent>
-                  <CardFooter className="p-2 bg-muted/50 flex justify-between">
-                    <Button variant="ghost" size="sm" onClick={() => router.push(`/currencies/${c.currencyid}/edit`)}>Edit</Button>
-                    <Button variant="ghost" size="sm" className="text-red-600" onClick={() => deleteCurrency(c.currencyid)}>Delete</Button>
-                  </CardFooter>
+                  <AdminOnly>
+                    <CardFooter className="p-2 bg-muted/50 flex justify-between">
+                      <Button variant="ghost" size="sm" onClick={() => router.push(`/currencies/${c.currencyid}/edit`)}>Edit</Button>
+                      <Button variant="ghost" size="sm" className="text-red-600" onClick={() => deleteCurrency(c.currencyid)}>Delete</Button>
+                    </CardFooter>
+                  </AdminOnly>
                 </Card>
               ))}
             </div>

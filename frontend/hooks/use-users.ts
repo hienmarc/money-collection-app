@@ -13,7 +13,7 @@ export function useUsers() {
       // 1. Fetch public profiles
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select("*")
+        .select("id, full_name, avatar_url, is_public, created_at, updated_at")
         .eq("is_public", true)
         .order("created_at", { ascending: false })
 
@@ -113,7 +113,7 @@ export function useUserProfile(userId: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("*")
+        .select("id, full_name, avatar_url, is_public, created_at, updated_at")
         .eq("id", userId)
         .maybeSingle()
 

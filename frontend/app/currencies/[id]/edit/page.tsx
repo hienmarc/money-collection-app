@@ -10,8 +10,17 @@ import { Label } from "@/components/ui/label"
 import { MultiSelect } from "@/components/ui/multi-select"
 import { toast } from "@/components/ui/use-toast"
 import { createClient } from "@/utils/supabase/client"
+import { AdminRouteGuard } from "@/components/AdminRouteGuard"
 
 export default function EditCurrencyPage({ params }: { params: Promise<{ id: string }> }) {
+  return (
+    <AdminRouteGuard backHref="/currencies">
+      <EditCurrencyForm params={params} />
+    </AdminRouteGuard>
+  )
+}
+
+function EditCurrencyForm({ params }: { params: Promise<{ id: string }> }) {
   const { id: currencyId } = use(params)
   const supabase = createClient()
   const router = useRouter()
@@ -20,8 +29,8 @@ export default function EditCurrencyPage({ params }: { params: Promise<{ id: str
   const [code, setCode] = useState("")
   const [symbol, setSymbol] = useState("")
   const [subunit, setSubunit] = useState("")
-  const [countries, setCountries] = useState([])
-  const [availableCountries, setAvailableCountries] = useState([])
+  const [countries, setCountries] = useState<string[]>([])
+  const [availableCountries, setAvailableCountries] = useState<{ value: string; label: string }[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
@@ -52,7 +61,7 @@ export default function EditCurrencyPage({ params }: { params: Promise<{ id: str
       setCode(data.code)
       setSymbol(data.symbol || "")
       setSubunit(data.subunit || "")
-      setCountries(data.currencycountry.map((cc) => cc.countryid.toString()))
+      setCountries(data.currencycountry.map((cc: { countryid: number }) => cc.countryid.toString()))
     }
   }
 
@@ -61,7 +70,7 @@ export default function EditCurrencyPage({ params }: { params: Promise<{ id: str
     if (error) {
       console.error("Error fetching countries:", error)
     } else {
-      setAvailableCountries(data.map((country) => ({ value: country.countryid.toString(), label: country.name })))
+      setAvailableCountries(data.map((country: { countryid: number; name: string }) => ({ value: country.countryid.toString(), label: country.name })))
     }
   }
 
@@ -82,7 +91,7 @@ export default function EditCurrencyPage({ params }: { params: Promise<{ id: str
         symbol,
         subunit,
       })
-      .eq("currencyid", id)
+      .eq("currencyid", currencyId)
 
     if (error) {
       console.error("Error updating currency:", error)
@@ -112,7 +121,7 @@ export default function EditCurrencyPage({ params }: { params: Promise<{ id: str
         toast({
           title: "Warning",
           description: "Currency updated, but there was an error updating country associations.",
-          variant: "warning",
+          variant: "destructive",
         })
       } else {
         toast({
@@ -179,4 +188,3 @@ export default function EditCurrencyPage({ params }: { params: Promise<{ id: str
     </form>
   )
 }
-

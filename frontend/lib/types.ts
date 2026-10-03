@@ -14,6 +14,7 @@ export interface Currency {
   name: string
   numistaid?: number
   symbol?: string
+  subunit?: string
   created_at?: string
 }
 

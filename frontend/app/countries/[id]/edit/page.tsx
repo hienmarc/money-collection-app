@@ -9,8 +9,17 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "@/components/ui/use-toast"
 import { createClient } from "@/utils/supabase/client"
+import { AdminRouteGuard } from "@/components/AdminRouteGuard"
 
 export default function EditCountryPage({ params }: { params: Promise<{ id: string }> }) {
+  return (
+    <AdminRouteGuard backHref="/countries">
+      <EditCountryForm params={params} />
+    </AdminRouteGuard>
+  )
+}
+
+function EditCountryForm({ params }: { params: Promise<{ id: string }> }) {
   const { id: countryId } = use(params)
   const supabase = createClient()
   const router = useRouter()
@@ -109,4 +118,3 @@ export default function EditCountryPage({ params }: { params: Promise<{ id: stri
     </form>
   )
 }
-

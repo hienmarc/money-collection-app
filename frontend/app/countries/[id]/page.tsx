@@ -12,6 +12,7 @@ import { Globe, MapPin, Landmark, CreditCard, Edit, ArrowLeft, ExternalLink, Ban
 import { createClient } from "@/utils/supabase/client"
 import { useQuery } from "@tanstack/react-query"
 import { use } from "react"
+import { AdminOnly } from "@/components/AdminRouteGuard"
 
 export default function CountryDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = createClient()
@@ -139,12 +140,14 @@ export default function CountryDetailsPage({ params }: { params: Promise<{ id: s
                 )}
               </div>
             </div>
-            <Link href={`/countries/${countryId}/edit`}>
-              <Button variant="outline" size="sm" className="h-9">
-                <Edit className="mr-2 h-4 w-4" />
-                Edit Country
-              </Button>
-            </Link>
+            <AdminOnly>
+              <Link href={`/countries/${countryId}/edit`}>
+                <Button variant="outline" size="sm" className="h-9">
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit Country
+                </Button>
+              </Link>
+            </AdminOnly>
           </div>
 
           {/* Quick stats */}
