@@ -54,6 +54,10 @@ data "aws_iam_policy_document" "apply_pipeline_permissions" {
       "s3:PutLifecycleConfiguration",
       "s3:PutBucketPublicAccessBlock",
       "s3:PutBucketPolicy",
+      "s3:PutBucketCORS",
+      "s3:DeleteBucketCORS",
+      "s3:PutBucketNotification",
+      "s3:GetBucketNotification",
     ]
     resources = [
       "arn:aws:s3:::${var.aws_resource_prefix}-*",
@@ -71,10 +75,110 @@ data "aws_iam_policy_document" "apply_pipeline_permissions" {
       "iam:UpdateAssumeRolePolicy",
       "iam:DeleteRolePolicy",
       "iam:PutRolePolicy",
-      "iam:TagRole"
+      "iam:TagRole",
+      "iam:UntagRole",
     ]
     resources = [
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.aws_resource_prefix}-*",
+    ]
+  }
+
+  statement {
+    sid    = "PassProjectRolesToLambda"
+    effect = "Allow"
+    actions = [
+      "iam:PassRole",
+    ]
+    resources = [
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.aws_resource_prefix}-*",
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "iam:PassedToService"
+      values   = ["lambda.amazonaws.com"]
+    }
+  }
+
+  statement {
+    sid    = "ManageImageSearchTables"
+    effect = "Allow"
+    actions = [
+      "dynamodb:CreateTable",
+      "dynamodb:DeleteTable",
+      "dynamodb:DescribeTable",
+      "dynamodb:UpdateTable",
+      "dynamodb:TagResource",
+      "dynamodb:UntagResource",
+      "dynamodb:ListTagsOfResource",
+      "dynamodb:DescribeTimeToLive",
+      "dynamodb:UpdateTimeToLive",
+    ]
+    resources = [
+      "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/${var.aws_resource_prefix}-*-image-search-jobs",
+      "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/${var.aws_resource_prefix}-*-image-search-jobs/index/*",
+    ]
+  }
+
+  statement {
+    sid    = "ManageImageSearchFailureQueues"
+    effect = "Allow"
+    actions = [
+      "sqs:CreateQueue",
+      "sqs:DeleteQueue",
+      "sqs:GetQueueAttributes",
+      "sqs:SetQueueAttributes",
+      "sqs:GetQueueUrl",
+      "sqs:TagQueue",
+      "sqs:UntagQueue",
+      "sqs:ListQueueTags",
+    ]
+    resources = [
+      "arn:aws:sqs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:${var.aws_resource_prefix}-*-image-search-failures",
+    ]
+  }
+
+  statement {
+    sid    = "ManageImageSearchLambdas"
+    effect = "Allow"
+    actions = [
+      "lambda:CreateFunction",
+      "lambda:DeleteFunction",
+      "lambda:GetFunction",
+      "lambda:GetFunctionConfiguration",
+      "lambda:UpdateFunctionCode",
+      "lambda:UpdateFunctionConfiguration",
+      "lambda:AddPermission",
+      "lambda:RemovePermission",
+      "lambda:GetPolicy",
+      "lambda:ListVersionsByFunction",
+      "lambda:PublishVersion",
+      "lambda:TagResource",
+      "lambda:UntagResource",
+      "lambda:ListTags",
+      "lambda:PutFunctionEventInvokeConfig",
+      "lambda:GetFunctionEventInvokeConfig",
+      "lambda:DeleteFunctionEventInvokeConfig",
+    ]
+    resources = [
+      "arn:aws:lambda:${var.aws_region}:${data.aws_caller_identity.current.account_id}:function:${var.aws_resource_prefix}-*",
+      "arn:aws:lambda:${var.aws_region}:${data.aws_caller_identity.current.account_id}:function:${var.aws_resource_prefix}-*:event-invoke-config:*",
+    ]
+  }
+
+  statement {
+    sid    = "ManageImageSearchApiGateway"
+    effect = "Allow"
+    actions = [
+      "apigateway:GET",
+      "apigateway:POST",
+      "apigateway:PUT",
+      "apigateway:PATCH",
+      "apigateway:DELETE",
+    ]
+    resources = [
+      "arn:aws:apigateway:${var.aws_region}::/apis/*",
+      "arn:aws:apigateway:${var.aws_region}::/tags/*",
     ]
   }
 

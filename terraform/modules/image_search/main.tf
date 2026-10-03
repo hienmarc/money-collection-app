@@ -2,8 +2,10 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 locals {
-  prefix      = substr(trim(replace(lower(var.resource_prefix), "/[^a-z0-9-]/", "-"), "-"), 0, 20)
-  bucket_name = "${local.prefix}-${var.environment}-${data.aws_caller_identity.current.account_id}-${data.aws_region.current.region}-imgsrch"
+  prefix                  = substr(trim(replace(lower(var.resource_prefix), "/[^a-z0-9-]/", "-"), "-"), 0, 20)
+  bucket_name             = "${local.prefix}-${var.environment}-${data.aws_caller_identity.current.account_id}-${data.aws_region.current.region}-imgsrch"
+  api_function_name       = "${local.prefix}-${var.environment}-image-search-api"
+  processor_function_name = "${local.prefix}-${var.environment}-image-search-processor"
   common_tags = {
     Project     = "money-collection-app"
     Environment = var.environment
@@ -147,14 +149,44 @@ resource "aws_iam_role" "processor" {
   tags = local.common_tags
 }
 
-resource "aws_iam_role_policy_attachment" "api_logs" {
-  role       = aws_iam_role.api.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+resource "aws_iam_role_policy" "api_logs" {
+  name = "image-search-api-logs"
+  role = aws_iam_role.api.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["logs:CreateLogGroup"]
+        Resource = "*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["logs:CreateLogStream", "logs:PutLogEvents"]
+        Resource = "arn:aws:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${local.api_function_name}:*"
+      },
+    ]
+  })
 }
 
-resource "aws_iam_role_policy_attachment" "processor_logs" {
-  role       = aws_iam_role.processor.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+resource "aws_iam_role_policy" "processor_logs" {
+  name = "image-search-processor-logs"
+  role = aws_iam_role.processor.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["logs:CreateLogGroup"]
+        Resource = "*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["logs:CreateLogStream", "logs:PutLogEvents"]
+        Resource = "arn:aws:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${local.processor_function_name}:*"
+      },
+    ]
+  })
 }
 
 resource "aws_iam_role_policy" "api" {
@@ -213,7 +245,7 @@ resource "aws_iam_role_policy" "processor" {
 }
 
 resource "aws_lambda_function" "api" {
-  function_name    = "${local.prefix}-${var.environment}-image-search-api"
+  function_name    = local.api_function_name
   role             = aws_iam_role.api.arn
   runtime          = "nodejs22.x"
   handler          = "handler.handler"
@@ -236,7 +268,7 @@ resource "aws_lambda_function" "api" {
 }
 
 resource "aws_lambda_function" "processor" {
-  function_name    = "${local.prefix}-${var.environment}-image-search-processor"
+  function_name    = local.processor_function_name
   role             = aws_iam_role.processor.arn
   runtime          = "python3.12"
   handler          = "handler.lambda_handler"
