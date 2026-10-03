@@ -112,6 +112,7 @@ data "aws_iam_policy_document" "apply_pipeline_permissions" {
       "dynamodb:UntagResource",
       "dynamodb:ListTagsOfResource",
       "dynamodb:DescribeTimeToLive",
+      "dynamodb:DescribeContinuousBackups",
       "dynamodb:UpdateTimeToLive",
     ]
     resources = [
@@ -177,6 +178,7 @@ data "aws_iam_policy_document" "apply_pipeline_permissions" {
       "apigateway:DELETE",
     ]
     resources = [
+      "arn:aws:apigateway:${var.aws_region}::/apis",
       "arn:aws:apigateway:${var.aws_region}::/apis/*",
       "arn:aws:apigateway:${var.aws_region}::/tags/*",
     ]

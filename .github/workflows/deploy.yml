@@ -158,7 +158,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: tfplan-${{ github.ref_name }}-${{ github.sha }}
+          name: tfplan-${{ github.run_id }}-${{ github.sha }}
           path: ${{ env.TF_WORKING_DIR }}/tfplan
           retention-days: 30
 
