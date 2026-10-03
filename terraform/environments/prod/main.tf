@@ -12,6 +12,7 @@ terraform {
     upstash  = { source = "upstash/upstash", version = "~> 1.5" }
     vercel   = { source = "vercel/vercel", version = ">= 4.8" }
     aws      = { source = "hashicorp/aws", version = "~> 6.0" }
+    archive  = { source = "hashicorp/archive", version = "~> 2.7" }
     tfe      = { source = "hashicorp/tfe", version = "~> 0.55" }
     time     = { source = "hashicorp/time", version = "~> 0.11" }
   }

@@ -7,16 +7,18 @@ on:
       - main
     paths:
       - "**.tf"
+      - "lambdas/**"
       - "supabase/**"
       - "frontend/**"
       - ".github/workflows/deploy.yml"
+  workflow_dispatch:
 
 permissions:
   contents: read
   id-token: write
 
 concurrency:
-  group: deploy-${{ github.ref_name }}
+  group: deploy-${{ github.ref_name == 'main' && 'prod' || 'dev' }}
   cancel-in-progress: false
 
 jobs:
@@ -108,6 +110,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: lambdas/image-search-api/package-lock.json
+
+      - name: Build image-search API Lambda
+        working-directory: lambdas/image-search-api
+        run: |
+          npm ci
+          npm run typecheck
+          npm run build
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
