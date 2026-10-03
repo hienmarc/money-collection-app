@@ -10,13 +10,14 @@ on:
       - "supabase/**"
       - "frontend/**"
       - ".github/workflows/deploy.yml"
+  workflow_dispatch:
 
 permissions:
   contents: read
   id-token: write
 
 concurrency:
-  group: deploy-${{ github.ref_name }}
+  group: deploy-${{ github.ref_name == 'main' && 'prod' || 'dev' }}
   cancel-in-progress: false
 
 jobs:
