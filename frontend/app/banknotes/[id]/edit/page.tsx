@@ -15,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "@/components/ui/use-toast"
 import { Loader2 } from "lucide-react"
-import { BanknoteGrade, Currency, StorageUnit } from "@/lib/types"
+import { BanknoteGrade, Currency } from "@/lib/types"
 import { useBanknote } from "@/hooks/use-banknotes"
 import { createClient } from "@/utils/supabase/client"
 
@@ -41,7 +41,6 @@ export default function EditBanknotePage({ params }: { params: Promise<{ id: str
     width: "",
     height: "",
     material: "",
-    storageunitid: "",
     numistaid: "",
     grade: "",
     description: "",
@@ -53,22 +52,13 @@ export default function EditBanknotePage({ params }: { params: Promise<{ id: str
 
   const [yearOptions, setYearOptions] = useState<number[]>([])
 
-  // Queries for currencies and storage units
+  // Query for currencies
   const { data: currencies = [] } = useQuery({
     queryKey: ["currencies"],
     queryFn: async () => {
       const { data, error } = await supabase.from("currencies").select("currencyid, code")
       if (error) throw error
       return (data || []) as Currency[]
-    },
-  })
-
-  const { data: storageUnits = [] } = useQuery({
-    queryKey: ["storageUnits"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("storageunits").select("storageunitid, name")
-      if (error) throw error
-      return (data || []) as StorageUnit[]
     },
   })
 
@@ -82,7 +72,6 @@ export default function EditBanknotePage({ params }: { params: Promise<{ id: str
         width: banknote.width?.toString() || "",
         height: banknote.height?.toString() || "",
         material: banknote.material || "",
-        storageunitid: banknote.storageunitid?.toString() || "",
         numistaid: banknote.numistaid || "",
         grade: banknote.grade || "",
         description: banknote.notes || "",
@@ -119,7 +108,6 @@ export default function EditBanknotePage({ params }: { params: Promise<{ id: str
         width: formData.width ? Number.parseFloat(formData.width) : null,
         height: formData.height ? Number.parseFloat(formData.height) : null,
         material: formData.material,
-        storageunitid: Number.parseInt(formData.storageunitid),
         numistaid: formData.numistaid,
         grade: formData.grade as BanknoteGrade,
         notes: formData.description,
@@ -290,25 +278,6 @@ export default function EditBanknotePage({ params }: { params: Promise<{ id: str
                 <div className="space-y-2">
                   <Label htmlFor="material">Material</Label>
                   <Input id="material" name="material" value={formData.material} onChange={handleChange} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="storageUnit">Storage Unit</Label>
-                  <Select
-                    name="storageunitid"
-                    value={formData.storageunitid}
-                    onValueChange={(value) => handleChange({ target: { name: "storageunitid", value } } as any)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select storage unit" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {storageUnits.map((unit) => (
-                        <SelectItem key={unit.storageunitid} value={unit.storageunitid.toString()}>
-                          {unit.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="numistaid">Numista ID</Label>

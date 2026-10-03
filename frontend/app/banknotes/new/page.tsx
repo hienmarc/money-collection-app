@@ -23,7 +23,6 @@ import {
   Coins,
   Calendar,
   Star,
-  Archive,
   Ruler,
   RulerIcon as RulerSquare,
   Layers,
@@ -35,7 +34,7 @@ import {
   FileDigit,
   ExternalLink,
 } from "lucide-react"
-import { BanknoteGrade, Currency, StorageUnit } from "@/lib/types"
+import { BanknoteGrade, Currency } from "@/lib/types"
 import Link from "next/link"
 import { useIsAdmin } from "@/hooks/use-is-admin"
 
@@ -60,7 +59,6 @@ export default function NewBanknotePage() {
     width: "",
     height: "",
     material: "",
-    storageunitid: "",
     numistaid: numistaIdParam || "",
     grade: gradeParam || "",
     description: "",
@@ -80,15 +78,6 @@ export default function NewBanknotePage() {
       const { data, error } = await supabase.from("currencies").select("currencyid, code, numistaid")
       if (error) throw error
       return (data || []) as Currency[]
-    },
-  })
-
-  const { data: storageUnits = [] } = useQuery({
-    queryKey: ["storageUnits"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("storageunits").select("storageunitid, name")
-      if (error) throw error
-      return (data || []) as StorageUnit[]
     },
   })
 
@@ -201,7 +190,6 @@ export default function NewBanknotePage() {
       year: Number.parseInt(formData.year),
       width: formData.width ? Number.parseFloat(formData.width) : null,
       height: formData.height ? Number.parseFloat(formData.height) : null,
-      storageunitid: Number.parseInt(formData.storageunitid),
     }
 
     saveBanknoteMutation.mutate(banknoteToSave, {
@@ -370,8 +358,8 @@ export default function NewBanknotePage() {
                       </div>
                     </div>
 
-                    {/* Second row: Year, Grade, Storage Unit */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {/* Second row: Year and Grade */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div className="space-y-1">
                         <Label htmlFor="year" className="text-xs font-medium flex items-center">
                           <Calendar className="h-3 w-3 mr-1 text-muted-foreground" />
@@ -424,29 +412,6 @@ export default function NewBanknotePage() {
                             {Object.values(BanknoteGrade).map((grade) => (
                               <SelectItem key={grade} value={grade}>
                                 {grade}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-1">
-                        <Label htmlFor="storageUnit" className="text-xs font-medium flex items-center">
-                          <Archive className="h-3 w-3 mr-1 text-muted-foreground" />
-                          Storage Unit
-                        </Label>
-                        <Select
-                          name="storageunitid"
-                          value={formData.storageunitid}
-                          onValueChange={(value) => handleChange({ target: { name: "storageunitid", value } } as any)}
-                        >
-                          <SelectTrigger className="h-8 text-sm">
-                            <SelectValue placeholder="Select storage unit" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {storageUnits.map((unit) => (
-                              <SelectItem key={unit.storageunitid} value={unit.storageunitid.toString()}>
-                                {unit.name}
                               </SelectItem>
                             ))}
                           </SelectContent>
