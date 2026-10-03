@@ -9,12 +9,13 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from '@/components/ui/use-toast'
-import { Loader2, Mail } from 'lucide-react'
+import { CheckCircle2, Loader2, Mail } from 'lucide-react'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [signupNeedsConfirmation, setSignupNeedsConfirmation] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -34,6 +35,7 @@ export default function LoginPage() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSignupNeedsConfirmation(false)
     setLoading(true)
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -50,7 +52,7 @@ export default function LoginPage() {
       router.push('/')
       router.refresh()
     } else {
-      toast({ title: 'Success', description: 'Check your email to confirm your account!' })
+      setSignupNeedsConfirmation(true)
       setLoading(false)
     }
   }
@@ -135,6 +137,12 @@ export default function LoginPage() {
                 <Button className="w-full" type="submit" disabled={loading}>
                   {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Create Account'}
                 </Button>
+                {signupNeedsConfirmation && (
+                  <p role="status" className="flex items-start gap-2 rounded-md bg-green-50 p-3 text-sm text-green-800">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+                    Account created. Check your email for a confirmation link to verify your account.
+                  </p>
+                )}
               </form>
             </TabsContent>
           </Tabs>
