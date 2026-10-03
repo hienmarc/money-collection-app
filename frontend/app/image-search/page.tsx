@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { AlertCircle, Camera, CheckCircle2, Clock3, Loader2, Search, Trash2, UploadCloud } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { NumistaBanknoteCard } from "@/components/NumistaBanknoteCard"
 import { useDeleteImageSearch, useImageSearchJobs, useUploadImageSearch } from "@/hooks/use-image-search"
 
@@ -19,6 +20,7 @@ export default function ImageSearchPage() {
   const router = useRouter()
   const [file, setFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState("")
+  const [enlargedImage, setEnlargedImage] = useState<{ src: string; alt: string } | null>(null)
   const [fileError, setFileError] = useState("")
   const [pollUntil, setPollUntil] = useState(0)
   const jobs = useImageSearchJobs(pollUntil)
@@ -85,7 +87,14 @@ export default function ImageSearchPage() {
           <form onSubmit={submit} className="space-y-4">
             <div className="flex min-h-36 flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed p-6 text-center">
               {previewUrl ? (
-                <img src={previewUrl} alt="Selected banknote preview" className="max-h-52 max-w-full object-contain" />
+                <button
+                  type="button"
+                  className="cursor-zoom-in"
+                  aria-label="View selected banknote image full screen"
+                  onClick={() => setEnlargedImage({ src: previewUrl, alt: "Selected banknote" })}
+                >
+                  <img src={previewUrl} alt="Selected banknote preview" className="max-h-52 max-w-full object-contain" />
+                </button>
               ) : (
                 <>
                   <UploadCloud className="h-8 w-8 text-muted-foreground" />
@@ -155,7 +164,16 @@ export default function ImageSearchPage() {
               <CardContent className="grid gap-4 p-4 sm:grid-cols-[160px_1fr]">
                 <div className="flex min-h-32 items-center justify-center overflow-hidden rounded bg-muted">
                   {job.image_url ? (
-                    <img src={job.image_url} alt="Uploaded banknote" className="max-h-48 w-full object-contain" />
+                    <button
+                      type="button"
+                      className="cursor-zoom-in"
+                      aria-label="View uploaded banknote image full screen"
+                      onClick={() => {
+                        if (job.image_url) setEnlargedImage({ src: job.image_url, alt: "Uploaded banknote" })
+                      }}
+                    >
+                      <img src={job.image_url} alt="Uploaded banknote" className="max-h-48 w-full object-contain" />
+                    </button>
                   ) : (
                     <span className="text-sm text-muted-foreground">Image unavailable</span>
                   )}
@@ -231,6 +249,18 @@ export default function ImageSearchPage() {
           </Button>
         )}
       </section>
+      <Dialog open={!!enlargedImage} onOpenChange={(open) => !open && setEnlargedImage(null)}>
+        <DialogContent className="h-[100dvh] w-screen max-w-none rounded-none border-0 bg-black/95 p-4 sm:rounded-none [&>button]:text-white [&>button]:opacity-100">
+          <DialogTitle className="sr-only">{enlargedImage?.alt ?? "Banknote image"}</DialogTitle>
+          {enlargedImage && (
+            <img
+              src={enlargedImage.src}
+              alt={enlargedImage.alt}
+              className="h-full max-h-[calc(100dvh-2rem)] w-full object-contain"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
