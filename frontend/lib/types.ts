@@ -47,6 +47,7 @@ export interface Banknote {
   current_value?: number
   condition_notes?: string
   numistaid?: string
+  ownerid?: string
   created_at?: string
   updated_at?: string
 }
@@ -66,4 +67,15 @@ export interface BanknoteFilters {
 export interface SortConfig {
   key: keyof Banknote | "currency" | "storageUnit"
   direction: "asc" | "desc"
+}
+
+export interface UserProfile {
+  id: string
+  full_name: string | null
+  avatar_url: string | null
+  is_public: boolean
+  created_at?: string
+  updated_at?: string
+  banknotesCount?: number
+  countriesCount?: number
 }

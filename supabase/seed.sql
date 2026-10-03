@@ -10,64 +10,90 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
 
 -- Account: test@example.com (ID: 00000000-0000-0000-0000-000000000001)
 INSERT INTO auth.users (
-  instance_id,
-  id,
-  aud,
-  role,
-  email,
-  encrypted_password,
-  email_confirmed_at,
-  recovery_sent_at,
-  last_sign_in_at,
-  raw_app_meta_data,
-  raw_user_meta_data,
-  created_at,
-  updated_at,
-  confirmation_token,
-  email_change,
-  email_change_token_new,
-  recovery_token
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  recovery_sent_at, last_sign_in_at, raw_app_meta_data, raw_user_meta_data,
+  created_at, updated_at, confirmation_token, email_change, email_change_token_new, recovery_token
 ) VALUES (
   '00000000-0000-0000-0000-000000000000',
   '00000000-0000-0000-0000-000000000001',
-  'authenticated',
-  'authenticated',
-  'test@example.com',
+  'authenticated', 'authenticated', 'test@example.com',
   extensions.crypt('password123', extensions.gen_salt('bf')),
-  now(),
-  now(),
-  now(),
+  now(), now(), now(),
   '{"provider":"email","providers":["email"]}',
   '{"full_name":"Test Collector"}',
-  now(),
-  now(),
-  '',
-  '',
-  '',
-  ''
+  now(), now(), '', '', '', ''
 ) ON CONFLICT (id) DO UPDATE SET
   encrypted_password = extensions.crypt('password123', extensions.gen_salt('bf')),
   email_confirmed_at = now();
 
 INSERT INTO auth.identities (
-  id,
-  user_id,
-  identity_data,
-  provider,
-  provider_id,
-  last_sign_in_at,
-  created_at,
-  updated_at
+  id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at
 ) VALUES (
-  '00000000-0000-0000-0000-000000000001',
-  '00000000-0000-0000-0000-000000000001',
+  '00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '{"sub":"00000000-0000-0000-0000-000000000001","email":"test@example.com"}'::jsonb,
-  'email',
-  'test@example.com',
-  now(),
-  now(),
-  now()
+  'email', 'test@example.com', now(), now(), now()
 ) ON CONFLICT (provider, provider_id) DO NOTHING;
+
+-- Account: alice@example.com (ID: 00000000-0000-0000-0000-000000000002) - Public collector
+INSERT INTO auth.users (
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  recovery_sent_at, last_sign_in_at, raw_app_meta_data, raw_user_meta_data,
+  created_at, updated_at, confirmation_token, email_change, email_change_token_new, recovery_token
+) VALUES (
+  '00000000-0000-0000-0000-000000000000',
+  '00000000-0000-0000-0000-000000000002',
+  'authenticated', 'authenticated', 'alice@example.com',
+  extensions.crypt('password123', extensions.gen_salt('bf')),
+  now(), now(), now(),
+  '{"provider":"email","providers":["email"]}',
+  '{"full_name":"Alice Numismatist"}',
+  now(), now(), '', '', '', ''
+) ON CONFLICT (id) DO UPDATE SET
+  encrypted_password = extensions.crypt('password123', extensions.gen_salt('bf')),
+  email_confirmed_at = now();
+
+INSERT INTO auth.identities (
+  id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at
+) VALUES (
+  '00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000002',
+  '{"sub":"00000000-0000-0000-0000-000000000002","email":"alice@example.com"}'::jsonb,
+  'email', 'alice@example.com', now(), now(), now()
+) ON CONFLICT (provider, provider_id) DO NOTHING;
+
+-- Account: bob@example.com (ID: 00000000-0000-0000-0000-000000000003) - Private collector
+INSERT INTO auth.users (
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  recovery_sent_at, last_sign_in_at, raw_app_meta_data, raw_user_meta_data,
+  created_at, updated_at, confirmation_token, email_change, email_change_token_new, recovery_token
+) VALUES (
+  '00000000-0000-0000-0000-000000000000',
+  '00000000-0000-0000-0000-000000000003',
+  'authenticated', 'authenticated', 'bob@example.com',
+  extensions.crypt('password123', extensions.gen_salt('bf')),
+  now(), now(), now(),
+  '{"provider":"email","providers":["email"]}',
+  '{"full_name":"Bob Private"}',
+  now(), now(), '', '', '', ''
+) ON CONFLICT (id) DO UPDATE SET
+  encrypted_password = extensions.crypt('password123', extensions.gen_salt('bf')),
+  email_confirmed_at = now();
+
+INSERT INTO auth.identities (
+  id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at
+) VALUES (
+  '00000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000003',
+  '{"sub":"00000000-0000-0000-0000-000000000003","email":"bob@example.com"}'::jsonb,
+  'email', 'bob@example.com', now(), now(), now()
+) ON CONFLICT (provider, provider_id) DO NOTHING;
+
+-- Profiles
+INSERT INTO public.profiles (id, full_name, is_public) VALUES
+  ('00000000-0000-0000-0000-000000000001', 'Test Collector', true),
+  ('00000000-0000-0000-0000-000000000002', 'Alice Numismatist', true),
+  ('00000000-0000-0000-0000-000000000003', 'Bob Private', false)
+ON CONFLICT (id) DO UPDATE SET
+  full_name = EXCLUDED.full_name,
+  is_public = EXCLUDED.is_public;
 
 
 -- -----------------------------------------------------------------------------
@@ -165,7 +191,33 @@ INSERT INTO public.banknotes (
    'https://en.numista.com/catalogue/photos/suisse/5f4cfb666b4aa3.95359504-original.jpg',
    'https://en.numista.com/catalogue/photos/suisse/5f4cfb66cfc1a7.34299684-original.jpg',
    'Swiss 20 Francs note representing light and cinema.',
-   '00000000-0000-0000-0000-000000000001', CURRENT_DATE - INTERVAL '1 day')
+   '00000000-0000-0000-0000-000000000001', CURRENT_DATE - INTERVAL '1 day'),
+
+  -- Alice's Banknotes (Public user)
+  (6, 'A1C3E5G7', 5.00, 1, 2013, 152.40, 69.85, 'Polymer', 1, 301, 'UNC',
+   'https://en.numista.com/catalogue/photos/canada/64880efecc2285.61356140-180.jpg',
+   'https://en.numista.com/catalogue/photos/canada/64880effc527f2.89038269-180.jpg',
+   'https://en.numista.com/catalogue/photos/canada/64880efecc2285.61356140-original.jpg',
+   'https://en.numista.com/catalogue/photos/canada/64880effc527f2.89038269-original.jpg',
+   'Canada 5 Dollars Sir Wilfrid Laurier note.',
+   '00000000-0000-0000-0000-000000000002', CURRENT_DATE - INTERVAL '4 days'),
+
+  (7, 'J2L4N6P8', 20.00, 2, 2017, 156.00, 66.30, 'Paper', 2, 302, 'VF',
+   'https://en.numista.com/catalogue/photos/etats-unis/5e94e607288ee9.51006634-180.jpg',
+   'https://en.numista.com/catalogue/photos/etats-unis/5e94e6079ff282.92400620-180.jpg',
+   'https://en.numista.com/catalogue/photos/etats-unis/5e94e607288ee9.51006634-original.jpg',
+   'https://en.numista.com/catalogue/photos/etats-unis/5e94e6079ff282.92400620-original.jpg',
+   'US 20 Dollars Andrew Jackson note.',
+   '00000000-0000-0000-0000-000000000002', CURRENT_DATE - INTERVAL '3 days'),
+
+  -- Bob's Banknote (Private user)
+  (8, 'Z9Y8X7W6', 10.00, 3, 2014, 127.00, 67.00, 'Cotton Paper', 1, 303, 'UNC',
+   'https://en.numista.com/catalogue/photos/zone_euro/6870cdc3a6a826.72264288-180.jpg',
+   'https://en.numista.com/catalogue/photos/zone_euro/6870cdc4010745.95660819-180.jpg',
+   'https://en.numista.com/catalogue/photos/zone_euro/6870cdc3a6a826.72264288-original.jpg',
+   'https://en.numista.com/catalogue/photos/zone_euro/6870cdc4010745.95660819-original.jpg',
+   'Europa series 10 Euro banknote.',
+   '00000000-0000-0000-0000-000000000003', CURRENT_DATE - INTERVAL '6 days')
 
 ON CONFLICT (banknoteid) DO UPDATE SET
   code = EXCLUDED.code,
