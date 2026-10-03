@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { AdminRouteGuard } from "@/components/AdminRouteGuard"
 import { toast } from "@/components/ui/use-toast"
 import { Search, Globe, Plus, Check, Loader2 } from "lucide-react"
 import { createClient } from "@/utils/supabase/client"
@@ -25,6 +26,14 @@ interface AvailableCountry {
 }
 
 export default function NewCountryPage() {
+  return (
+    <AdminRouteGuard backHref="/countries">
+      <NewCountryForm />
+    </AdminRouteGuard>
+  )
+}
+
+function NewCountryForm() {
   const router = useRouter()
   const supabase = createClient()
   const [availableCountries, setAvailableCountries] = useState<AvailableCountry[]>([])

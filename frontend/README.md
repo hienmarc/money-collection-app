@@ -7,3 +7,7 @@ The `frontend` directory contains the web application user interface for the **M
 - **User Experience**: Provides an interactive dashboard for banknote collectors to log inventory, view collection analytics, monitor overall collection value, browse country/currency details, and search banknotes on the Numista catalog.
 - **Data & Auth**: Integrates directly with Supabase via `@supabase/ssr` and `@supabase/supabase-js` for user authentication and PostgreSQL data management, while leveraging Upstash Redis for caching third-party API data.
 - **Deployment**: Managed as a Next.js framework deployment on Vercel, configured and deployed automatically via the root Terraform configurations.
+
+## User roles
+
+Admins can add, edit, and delete countries and currencies. Regular users can browse them and manage their own banknotes.

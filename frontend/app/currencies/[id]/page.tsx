@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2 } from "lucide-react"
 import { createClient } from "@/utils/supabase/client"
+import { AdminOnly } from "@/components/AdminRouteGuard"
 
 export default function CurrencyDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
@@ -89,9 +90,11 @@ export default function CurrencyDetailsPage({ params }: { params: Promise<{ id: 
         <h1 className="text-3xl font-bold">
           {currency.name} ({currency.code})
         </h1>
-        <Link href={`/currencies/${currencyId}/edit`}>
-          <Button>Edit Currency</Button>
-        </Link>
+        <AdminOnly>
+          <Link href={`/currencies/${currencyId}/edit`}>
+            <Button>Edit Currency</Button>
+          </Link>
+        </AdminOnly>
       </div>
 
       <Card>
@@ -144,4 +147,3 @@ export default function CurrencyDetailsPage({ params }: { params: Promise<{ id: 
     </div>
   )
 }
-

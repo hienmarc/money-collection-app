@@ -52,6 +52,8 @@ import {
 } from "lucide-react"
 import { createClient } from "@/utils/supabase/client"
 import { useCountries } from "@/hooks/use-countries"
+import { useIsAdmin } from "@/hooks/use-is-admin"
+import { AdminOnly } from "@/components/AdminRouteGuard"
 
 // Types
 interface Country {
@@ -64,12 +66,13 @@ interface Country {
 }
 
 interface SortConfig {
-  key: string
+  key: "name" | "code" | "continent"
   direction: "asc" | "desc"
 }
 
 export default function CountriesPage() {
   const { countries = [], isLoading, refreshCountries, deleteCountry, isRefetching } = useCountries()
+  const { error: adminError } = useIsAdmin()
 
   // State
   const [viewMode, setViewMode] = useState("grid")
@@ -120,8 +123,8 @@ export default function CountriesPage() {
 
     // Apply sorting
     result.sort((a, b) => {
-      const aValue = a[sortConfig.key as keyof Country] || ""
-      const bValue = b[sortConfig.key as keyof Country] || ""
+      const aValue = a[sortConfig.key] || ""
+      const bValue = b[sortConfig.key] || ""
 
       if (aValue < bValue) {
         return sortConfig.direction === "asc" ? -1 : 1
@@ -189,7 +192,7 @@ export default function CountriesPage() {
   }
 
   // Handle sort
-  const handleSort = (key: string) => {
+  const handleSort = (key: SortConfig["key"]) => {
     setSortConfig((prev) => ({
       key,
       direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc",
@@ -264,13 +267,15 @@ export default function CountriesPage() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-12">
-              <Checkbox
-                checked={paginatedCountries.length > 0 && selectedCountries.length === paginatedCountries.length}
-                onCheckedChange={toggleAllSelection}
-                aria-label="Select all"
-              />
-            </TableHead>
+            <AdminOnly>
+              <TableHead className="w-12">
+                <Checkbox
+                  checked={paginatedCountries.length > 0 && selectedCountries.length === paginatedCountries.length}
+                  onCheckedChange={toggleAllSelection}
+                  aria-label="Select all"
+                />
+              </TableHead>
+            </AdminOnly>
             <TableHead className="cursor-pointer" onClick={() => handleSort("name")}>
               <div className="flex items-center space-x-1">
                 <span>Name</span>
@@ -295,20 +300,22 @@ export default function CountriesPage() {
                 )}
               </div>
             </TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <AdminOnly><TableHead className="text-right">Actions</TableHead></AdminOnly>
           </TableRow>
         </TableHeader>
         <TableBody>
           {paginatedCountries.length > 0 ? (
             paginatedCountries.map((country) => (
               <TableRow key={country.countryid}>
-                <TableCell>
-                  <Checkbox
-                    checked={selectedCountries.includes(country.countryid)}
-                    onCheckedChange={() => toggleCountrySelection(country.countryid)}
-                    aria-label={`Select ${country.name}`}
-                  />
-                </TableCell>
+                <AdminOnly>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedCountries.includes(country.countryid)}
+                      onCheckedChange={() => toggleCountrySelection(country.countryid)}
+                      aria-label={`Select ${country.name}`}
+                    />
+                  </TableCell>
+                </AdminOnly>
                 <TableCell>
                   <div className="flex items-center space-x-2">
                     {country.flagUrl && (
@@ -328,31 +335,34 @@ export default function CountriesPage() {
                 </TableCell>
                 <TableCell>{country.code}</TableCell>
                 <TableCell>{country.continent && <Badge variant="outline">{country.continent}</Badge>}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end space-x-1">
-                    <Link href={`/countries/${country.countryid}/edit`}>
-                      <Button variant="ghost" size="icon" title="Edit">
-                        <Edit className="h-4 w-4" />
+                <AdminOnly>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end space-x-1">
+                      <Link href={`/countries/${country.countryid}/edit`}>
+                        <Button variant="ghost" size="icon" title="Edit">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setCountryToDelete(country.countryid)
+                          setIsDeleteDialogOpen(true)
+                        }}
+                        title="Delete"
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
-                    </Link>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        setCountryToDelete(country.countryid)
-                        setIsDeleteDialogOpen(true)
-                      }}
-                      title="Delete"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
+                    </div>
+                  </TableCell>
+                </AdminOnly>
               </TableRow>
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={5} className="h-24 text-center">
+              <AdminOnly><TableCell colSpan={2} /></AdminOnly>
+              <TableCell colSpan={3} className="h-24 text-center">
                 No countries found.
               </TableCell>
             </TableRow>
@@ -487,11 +497,18 @@ export default function CountriesPage() {
           <Button variant="outline" size="icon" onClick={() => refreshCountries()} disabled={isRefetching} title="Refresh">
             <RefreshCw className={`h-4 w-4 ${isRefetching ? "animate-spin" : ""}`} />
           </Button>
-          <Link href="/countries/new">
-            <Button>Add New Country</Button>
-          </Link>
+          <AdminOnly>
+            <Link href="/countries/new">
+              <Button>Add New Country</Button>
+            </Link>
+          </AdminOnly>
         </div>
       </div>
+      {adminError && (
+        <p role="alert" className="text-sm text-destructive">
+          Admin access could not be verified. Country management actions are unavailable.
+        </p>
+      )}
 
       {/* Filters and actions */}
       <div className="flex flex-col md:flex-row gap-4">
@@ -536,24 +553,26 @@ export default function CountriesPage() {
         <div className="flex gap-2">
           {renderViewToggle()}
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild disabled={selectedCountries.length === 0}>
-              <Button variant="outline" size="icon">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Bulk Actions</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => setBulkDeleteDialogOpen(true)}
-                className="text-destructive focus:text-destructive"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete Selected ({selectedCountries.length})
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <AdminOnly>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild disabled={selectedCountries.length === 0}>
+                <Button variant="outline" size="icon">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Bulk Actions</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setBulkDeleteDialogOpen(true)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Selected ({selectedCountries.length})
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </AdminOnly>
 
           <Button variant="outline" size="icon" onClick={exportToCSV} title="Export to CSV">
             <Download className="h-4 w-4" />
@@ -618,7 +637,7 @@ export default function CountriesPage() {
       <div className="flex items-center justify-center mt-4">{renderPagination()}</div>
 
       {/* Delete confirmation dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <AdminOnly><Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Country</DialogTitle>
@@ -645,10 +664,10 @@ export default function CountriesPage() {
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog></AdminOnly>
 
       {/* Bulk delete confirmation dialog */}
-      <Dialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+      <AdminOnly><Dialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Multiple Countries</DialogTitle>
@@ -665,7 +684,7 @@ export default function CountriesPage() {
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog></AdminOnly>
     </div>
   )
 }
