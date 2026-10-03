@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cd terraform/bootstrap
+ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT_DIR/terraform/bootstrap"
 
 echo "Applying bootstrap..."
 terraform init -input=false
@@ -14,5 +15,4 @@ gh variable set AWS_GITHUB_ACTIONS_ROLE_ARN \
   --body "$ROLE_ARN" \
   --repo hienmarc/money-collection-app
 
-cd ../..
 echo "Bootsrap done !"

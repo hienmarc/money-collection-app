@@ -117,7 +117,7 @@ For automated deployments and database backups via GitHub Actions, set the follo
 | :--- | :--- |
 | `AWS_REGION` | AWS Region for S3 database backup storage and IAM policies (e.g., `us-east-1`). |
 | `AWS_RESOURCE_PREFIX` | Naming prefix used for AWS resources and bucket naming conventions. |
-| `AWS_GITHUB_ACTIONS_ROLE_ARN` | AWS IAM Role ARN assumed passwordlessly by GitHub Actions via OIDC (generated via `./bootstrap.sh`). |
+| `AWS_GITHUB_ACTIONS_ROLE_ARN` | AWS IAM Role ARN assumed passwordlessly by GitHub Actions via OIDC (generated via `./scripts/bootstrap.sh`). |
 | `SUPABASE_ORGANIZATION_ID` | Supabase Organization ID under which projects are created. |
 | `SUPABASE_PROJECT_NAME` | Project name for the Supabase database instance. |
 | `SUPABASE_REGION` | Geographic region for the Supabase database instance (e.g., `us-east-1`). |
@@ -170,6 +170,10 @@ For automated deployments and database backups via GitHub Actions, set the follo
 
 6. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+### Full local deployment
+
+Run `./scripts/local-deploy.sh --start` to start the full local stack.
+
 The seed data for the database includes a sample account for testing purposes:
 - Email: `test@example.com`
 - Password: `password123`
@@ -209,7 +213,7 @@ github_repo = "<your-github-username>/<your-repo-name>"
 In a terminal where you are logged into AWS CLI with sufficient permissions, run the bootstrap script to create an OIDC identity provider and IAM role for GitHub Actions:
 
 ```bash
-./bootstrap.sh
+./scripts/bootstrap.sh
 ```
 
 ### GitHub Actions CI/CD
