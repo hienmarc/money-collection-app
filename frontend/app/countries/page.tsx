@@ -263,8 +263,8 @@ export default function CountriesPage() {
 
   // Render table view
   const renderListView = () => (
-    <div className="rounded-md border">
-      <Table>
+    <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+      <Table className="min-w-[620px]">
         <TableHeader>
           <TableRow>
             <AdminOnly>
@@ -276,7 +276,7 @@ export default function CountriesPage() {
                 />
               </TableHead>
             </AdminOnly>
-            <TableHead className="cursor-pointer" onClick={() => handleSort("name")}>
+            <TableHead className="cursor-pointer transition-colors hover:text-primary" onClick={() => handleSort("name")}>
               <div className="flex items-center space-x-1">
                 <span>Name</span>
                 {sortConfig.key === "name" && (
@@ -284,7 +284,7 @@ export default function CountriesPage() {
                 )}
               </div>
             </TableHead>
-            <TableHead className="cursor-pointer" onClick={() => handleSort("code")}>
+            <TableHead className="cursor-pointer transition-colors hover:text-primary" onClick={() => handleSort("code")}>
               <div className="flex items-center space-x-1">
                 <span>Code</span>
                 {sortConfig.key === "code" && (
@@ -292,7 +292,7 @@ export default function CountriesPage() {
                 )}
               </div>
             </TableHead>
-            <TableHead className="cursor-pointer" onClick={() => handleSort("continent")}>
+            <TableHead className="cursor-pointer transition-colors hover:text-primary" onClick={() => handleSort("continent")}>
               <div className="flex items-center space-x-1">
                 <span>Continent</span>
                 {sortConfig.key === "continent" && (
