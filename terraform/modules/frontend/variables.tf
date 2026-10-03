@@ -23,3 +23,4 @@ variable "rest_countries_api_key" {
   type      = string
   sensitive = true
 }
+variable "image_search_api_url" { type = string }
