@@ -56,15 +56,15 @@ const MarkdownContent = ({ content, isFullScreen }: { content: string; isFullScr
           <p {...props} className="mb-2 last:mb-0 leading-relaxed" />
         ),
         table: ({ node, ...props }) => (
-          <div className="overflow-x-auto my-4 border rounded-md">
-            <table {...props} className="w-full text-sm text-left" />
+          <div className="my-4 overflow-x-auto rounded-xl border bg-card shadow-sm">
+            <table {...props} className="w-full text-left text-sm [&_tbody_tr]:transition-colors [&_tbody_tr:hover]:bg-muted/40" />
           </div>
         ),
         th: ({ node, ...props }) => (
-          <th {...props} className="p-2 bg-muted font-bold border-b text-foreground" />
+          <th {...props} className="border-b bg-muted/50 px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground" />
         ),
         td: ({ node, ...props }) => (
-          <td {...props} className="p-2 border-b font-normal" />
+          <td {...props} className="border-b px-4 py-3 font-normal" />
         )
       }}
     >
