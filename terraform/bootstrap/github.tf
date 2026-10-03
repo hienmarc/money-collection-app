@@ -147,6 +147,7 @@ data "aws_iam_policy_document" "apply_pipeline_permissions" {
       "lambda:DeleteFunction",
       "lambda:GetFunction",
       "lambda:GetFunctionConfiguration",
+      "lambda:GetFunctionCodeSigningConfig",
       "lambda:UpdateFunctionCode",
       "lambda:UpdateFunctionConfiguration",
       "lambda:AddPermission",
@@ -176,6 +177,8 @@ data "aws_iam_policy_document" "apply_pipeline_permissions" {
       "apigateway:PUT",
       "apigateway:PATCH",
       "apigateway:DELETE",
+      "apigateway:TagResource",
+      "apigateway:UntagResource",
     ]
     resources = [
       "arn:aws:apigateway:${var.aws_region}::/apis",
