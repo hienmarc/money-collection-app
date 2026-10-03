@@ -58,12 +58,38 @@ export default function CollectionValuePage() {
               <button onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")} className="text-sm underline text-primary">Sort: {sortOrder}</button></CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader><TableRow><TableHead>Code</TableHead><TableHead>Denomination</TableHead><TableHead>Currency</TableHead><TableHead>Value ({selectedCurrency})</TableHead></TableRow></TableHeader>
-                <TableBody>{sortedBanknotes.map(b => (
-                  <TableRow key={b.banknoteid}><TableCell>{b.code}</TableCell><TableCell>{b.denomination}</TableCell><TableCell>{b.currencies?.code}</TableCell><TableCell>{calculateValue(b, selectedCurrency)?.toFixed(2) || "N/A"}</TableCell></TableRow>
-                ))}</TableBody>
-              </Table>
+              <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+                <Table className="min-w-[560px]">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Code</TableHead>
+                      <TableHead>Denomination</TableHead>
+                      <TableHead>Currency</TableHead>
+                      <TableHead>Value ({selectedCurrency})</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {sortedBanknotes.map((banknote) => (
+                      <TableRow key={banknote.banknoteid}>
+                        <TableCell>
+                          <span className="inline-flex rounded-md bg-muted px-2 py-1 font-mono text-xs font-medium">
+                            {banknote.code}
+                          </span>
+                        </TableCell>
+                        <TableCell className="font-semibold tabular-nums">{banknote.denomination}</TableCell>
+                        <TableCell>
+                          <span className="inline-flex rounded-full border bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                            {banknote.currencies?.code || "—"}
+                          </span>
+                        </TableCell>
+                        <TableCell className="font-semibold tabular-nums">
+                          {calculateValue(banknote, selectedCurrency)?.toFixed(2) || "N/A"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </>

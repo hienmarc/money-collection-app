@@ -187,16 +187,16 @@ export default function CurrenciesPage() {
       {isLoading ? <div className="flex justify-center py-8"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div> : (
         <>
           {viewMode === "table" ? (
-            <div className="border rounded-md">
-              <Table>
+            <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+              <Table className="min-w-[760px]">
                 <TableHeader>
                   <TableRow>
                     <AdminOnly><TableHead className="w-10"><Checkbox checked={paginatedCurrencies.length > 0 && paginatedCurrencies.every(c => selectedCurrencies.includes(c.currencyid))} onCheckedChange={handleSelectAll} /></TableHead></AdminOnly>
-                    <TableHead className="cursor-pointer" onClick={() => handleSort("name")}>Name {sortField === "name" && (sortDirection === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
-                    <TableHead onClick={() => handleSort("code")}>Code</TableHead>
+                    <TableHead className="cursor-pointer transition-colors hover:text-primary" onClick={() => handleSort("name")}>Name {sortField === "name" && (sortDirection === "asc" ? <ArrowUp className="inline h-4 w-4" /> : <ArrowDown className="inline h-4 w-4" />)}</TableHead>
+                    <TableHead className="cursor-pointer transition-colors hover:text-primary" onClick={() => handleSort("code")}>Code</TableHead>
                     <TableHead>Symbol</TableHead>
                     <TableHead>Countries</TableHead>
-                    <TableHead onClick={() => handleSort("exchangeRate")}>Rate (1 {baseCurrency} =)</TableHead>
+                    <TableHead className="cursor-pointer transition-colors hover:text-primary" onClick={() => handleSort("exchangeRate")}>Rate (1 {baseCurrency} =)</TableHead>
                     <TableHead className="w-10"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -206,7 +206,15 @@ export default function CurrenciesPage() {
                       <AdminOnly><TableCell><Checkbox checked={selectedCurrencies.includes(c.currencyid)} onCheckedChange={checked => handleSelectCurrency(c.currencyid, !!checked)} /></TableCell></AdminOnly>
                       <TableCell><Link href={`/currencies/${c.currencyid}`} className="hover:underline font-medium">{c.name}</Link></TableCell>
                       <TableCell>{c.code}</TableCell>
-                      <TableCell>{c.symbol || "-"}</TableCell>
+                      <TableCell>
+                        {c.symbol ? (
+                          <Badge variant="outline" className="bg-muted/50 font-medium">
+                            {c.symbol}
+                          </Badge>
+                        ) : (
+                          "—"
+                        )}
+                      </TableCell>
                       <TableCell className="max-w-[200px] truncate">{c.countries.join(", ")}</TableCell>
                       <TableCell>{getExchangeRate(c.code)?.toFixed(4) || "N/A"} {c.code}</TableCell>
                       <TableCell>
