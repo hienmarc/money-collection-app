@@ -122,24 +122,6 @@ data "aws_iam_policy_document" "apply_pipeline_permissions" {
   }
 
   statement {
-    sid    = "ManageImageSearchFailureQueues"
-    effect = "Allow"
-    actions = [
-      "sqs:CreateQueue",
-      "sqs:DeleteQueue",
-      "sqs:GetQueueAttributes",
-      "sqs:SetQueueAttributes",
-      "sqs:GetQueueUrl",
-      "sqs:TagQueue",
-      "sqs:UntagQueue",
-      "sqs:ListQueueTags",
-    ]
-    resources = [
-      "arn:aws:sqs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:${var.aws_resource_prefix}-*-image-search-failures",
-    ]
-  }
-
-  statement {
     sid    = "ManageImageSearchLambdas"
     effect = "Allow"
     actions = [

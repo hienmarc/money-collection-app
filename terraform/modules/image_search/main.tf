@@ -104,12 +104,6 @@ resource "aws_dynamodb_table" "jobs" {
   tags = local.common_tags
 }
 
-resource "aws_sqs_queue" "processor_failures" {
-  name                      = "${local.prefix}-${var.environment}-image-search-failures"
-  message_retention_seconds = 1209600
-  tags                      = local.common_tags
-}
-
 data "archive_file" "api" {
   type        = "zip"
   source_dir  = "${path.module}/../../../lambdas/image-search-api/dist"
@@ -235,11 +229,6 @@ resource "aws_iam_role_policy" "processor" {
         Action   = ["bedrock:InvokeModel"]
         Resource = "arn:aws:bedrock:${data.aws_region.current.region}::foundation-model/${var.bedrock_model_id}"
       },
-      {
-        Effect   = "Allow"
-        Action   = ["sqs:SendMessage"]
-        Resource = aws_sqs_queue.processor_failures.arn
-      },
     ]
   })
 }
@@ -292,11 +281,6 @@ resource "aws_lambda_function_event_invoke_config" "processor" {
   function_name                = aws_lambda_function.processor.function_name
   maximum_retry_attempts       = 2
   maximum_event_age_in_seconds = 3600
-  destination_config {
-    on_failure {
-      destination = aws_sqs_queue.processor_failures.arn
-    }
-  }
 }
 
 resource "aws_lambda_permission" "s3_invoke_processor" {
