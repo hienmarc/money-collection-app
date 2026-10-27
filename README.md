@@ -87,7 +87,7 @@ These variables are required by the Next.js frontend application. In production,
 | Variable | Sensitive | Usage |
 | :--- | :---: | :--- |
 | `NEXT_PUBLIC_SUPABASE_URL` | No | Public Supabase project URL (e.g., `https://<project-id>.supabase.co`) for client-side API requests. |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | No | Public Supabase Anonymous API key for authentication and client-side database queries under Row Level Security. |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | No | Public Supabase publishable API key for authentication and client-side database queries under Row Level Security. |
 | `NUMISTA_API_KEY` | **Yes** | API key for the [Numista API](https://en.numista.com/api/doc/index.php). Used by backend API routes (`/api/numista`) to search and import banknote catalog metadata. |
 | `EXCHANGERATES_API_KEY` | **Yes** | API key for exchange rate data. Used by backend API routes (`/api/exchange-rates`) to calculate live collection value across multiple currencies. |
 | `REST_COUNTRIES_API_KEY` | **Yes** | API key for REST Countries API. Used by backend API routes (`/api/countries`) to retrieve country details and flags. |

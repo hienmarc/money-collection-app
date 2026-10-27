@@ -244,13 +244,13 @@ resource "aws_lambda_function" "api" {
   memory_size      = 256
   environment {
     variables = {
-      JOBS_TABLE          = aws_dynamodb_table.jobs.name
-      IMAGES_BUCKET       = aws_s3_bucket.images.bucket
-      SUPABASE_URL        = "https://${var.supabase_project_id}.supabase.co"
-      SUPABASE_ANON_KEY   = var.supabase_anon_key
-      MAX_UPLOAD_BYTES    = "5242880"
-      UPLOAD_URL_TTL_SECS = "300"
-      IMAGE_URL_TTL_SECS  = "900"
+      JOBS_TABLE               = aws_dynamodb_table.jobs.name
+      IMAGES_BUCKET            = aws_s3_bucket.images.bucket
+      SUPABASE_URL             = "https://${var.supabase_project_id}.supabase.co"
+      SUPABASE_PUBLISHABLE_KEY = var.supabase_publishable_key
+      MAX_UPLOAD_BYTES         = "5242880"
+      UPLOAD_URL_TTL_SECS      = "300"
+      IMAGE_URL_TTL_SECS       = "900"
     }
   }
   tags = local.common_tags

@@ -17,25 +17,25 @@ module "backup" {
 module "image_search" {
   source = "../image_search"
 
-  environment         = var.environment
-  resource_prefix     = var.aws_resource_prefix
-  supabase_project_id = module.database.project_id
-  supabase_anon_key   = module.database.anon_key
-  numista_api_key     = var.numista_api_key
+  environment              = var.environment
+  resource_prefix          = var.aws_resource_prefix
+  supabase_project_id      = module.database.project_id
+  supabase_publishable_key = module.database.publishable_key
+  numista_api_key          = var.numista_api_key
 }
 
 module "frontend" {
-  source                 = "../frontend"
-  depends_on             = [module.image_search]
-  environment            = var.environment
-  project_id             = var.vercel_project_id
-  project_directory      = var.vercel_project_directory
-  supabase_project_id    = module.database.project_id
-  supabase_anon_key      = module.database.anon_key
-  redis_rest_url         = var.redis_rest_url
-  redis_rest_token       = var.redis_rest_token
-  numista_api_key        = var.numista_api_key
-  exchangerates_api_key  = var.exchangerates_api_key
-  rest_countries_api_key = var.rest_countries_api_key
-  image_search_api_url   = module.image_search.api_url
+  source                   = "../frontend"
+  depends_on               = [module.image_search]
+  environment              = var.environment
+  project_id               = var.vercel_project_id
+  project_directory        = var.vercel_project_directory
+  supabase_project_id      = module.database.project_id
+  supabase_publishable_key = module.database.publishable_key
+  redis_rest_url           = var.redis_rest_url
+  redis_rest_token         = var.redis_rest_token
+  numista_api_key          = var.numista_api_key
+  exchangerates_api_key    = var.exchangerates_api_key
+  rest_countries_api_key   = var.rest_countries_api_key
+  image_search_api_url     = module.image_search.api_url
 }

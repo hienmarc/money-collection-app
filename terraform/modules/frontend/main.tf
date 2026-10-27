@@ -2,7 +2,7 @@ locals {
   target = var.environment == "prod" ? "production" : "preview"
   environment_variables = {
     NEXT_PUBLIC_SUPABASE_URL         = { value = "https://${var.supabase_project_id}.supabase.co", sensitive = false }
-    NEXT_PUBLIC_SUPABASE_ANON_KEY    = { value = var.supabase_anon_key, sensitive = false }
+    NEXT_PUBLIC_SUPABASE_ANON_KEY    = { value = var.supabase_publishable_key, sensitive = false }
     NUMISTA_API_KEY                  = { value = var.numista_api_key, sensitive = true }
     EXCHANGERATES_API_KEY            = { value = var.exchangerates_api_key, sensitive = true }
     REST_COUNTRIES_API_KEY           = { value = var.rest_countries_api_key, sensitive = true }

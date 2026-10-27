@@ -2,7 +2,7 @@ variable "environment" { type = string }
 variable "project_id" { type = string }
 variable "project_directory" { type = string }
 variable "supabase_project_id" { type = string }
-variable "supabase_anon_key" {
+variable "supabase_publishable_key" {
   type      = string
   sensitive = true
 }

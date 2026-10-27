@@ -18,7 +18,7 @@ const s3 = new S3Client({})
 const tableName = requiredEnvironment("JOBS_TABLE")
 const bucket = requiredEnvironment("IMAGES_BUCKET")
 const supabaseUrl = requiredEnvironment("SUPABASE_URL").replace(/\/$/, "")
-const supabaseAnonKey = requiredEnvironment("SUPABASE_ANON_KEY")
+const supabasePublishableKey = requiredEnvironment("SUPABASE_PUBLISHABLE_KEY")
 const maxUploadBytes = Number.parseInt(process.env.MAX_UPLOAD_BYTES ?? "5242880", 10)
 const uploadUrlTtlSeconds = Number.parseInt(process.env.UPLOAD_URL_TTL_SECS ?? "300", 10)
 const imageUrlTtlSeconds = Number.parseInt(process.env.IMAGE_URL_TTL_SECS ?? "900", 10)
@@ -78,7 +78,7 @@ async function authenticate(event: APIGatewayProxyEventV2): Promise<string> {
   try {
     result = await fetch(`${supabaseUrl}/auth/v1/user`, {
       headers: {
-        apikey: supabaseAnonKey,
+        apikey: supabasePublishableKey,
         authorization,
       },
       signal: AbortSignal.timeout(8_000),
