@@ -56,13 +56,13 @@ jobs:
         run: supabase link --project-ref "${{ steps.supabase_project_id.outputs.supabase_project_id }}"
 
       - name: Backup roles
-        run: supabase db dump -f "${{ steps.date.outputs.value }}_roles.sql" --role-only --linked
+        run: supabase db dump -f "${{ steps.date.outputs.value }}_roles.sql" --role-only --remote
 
       - name: Backup schemas
-        run: supabase db dump -f "${{ steps.date.outputs.value }}_schemas.sql" --schema public,auth --linked
+        run: supabase db dump -f "${{ steps.date.outputs.value }}_schemas.sql" --schema public,auth --remote
 
       - name: Backup data
-        run: supabase db dump -f "${{ steps.date.outputs.value }}_data.sql" --data-only --use-copy --schema public,auth --linked
+        run: supabase db dump -f "${{ steps.date.outputs.value }}_data.sql" --data-only --use-copy --schema public,auth --remote
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
