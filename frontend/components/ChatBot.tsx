@@ -33,6 +33,7 @@ import { createClient } from "@/utils/supabase/client"
 interface Message {
   role: "user" | "assistant"
   content: string
+  followUpQuestions?: string[]
 }
 
 const apiUrl = process.env.NEXT_PUBLIC_IMAGE_SEARCH_API_URL?.replace(/\/$/, "")
@@ -57,10 +58,25 @@ const MarkdownContent = ({ content, isFullScreen }: { content: string; isFullScr
           />
         ),
         a: ({ node, ...props }) => (
-          <a {...props} className="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer" />
+          <a {...props} className="text-blue-800 hover:underline dark:text-blue-300" target="_blank" rel="noopener noreferrer" />
         ),
         p: ({ node, ...props }) => (
-          <p {...props} className="mb-2 last:mb-0 leading-relaxed" />
+          <p {...props} className="mb-2 last:mb-0 leading-relaxed text-slate-900 dark:text-slate-100" />
+        ),
+        h1: ({ node, ...props }) => (
+          <h1 {...props} className="text-slate-950 dark:text-white" />
+        ),
+        h2: ({ node, ...props }) => (
+          <h2 {...props} className="text-slate-950 dark:text-white" />
+        ),
+        h3: ({ node, ...props }) => (
+          <h3 {...props} className="text-slate-950 dark:text-white" />
+        ),
+        li: ({ node, ...props }) => (
+          <li {...props} className="text-slate-900 dark:text-slate-100" />
+        ),
+        strong: ({ node, ...props }) => (
+          <strong {...props} className="font-semibold text-slate-950 dark:text-white" />
         ),
         table: ({ node, ...props }) => (
           <div className="my-4 overflow-x-auto rounded-xl border bg-card shadow-sm">
@@ -114,10 +130,10 @@ export function ChatBot() {
     }
   }, [messages, isLoading])
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return
+  const handleSend = async (suggestedQuestion?: string) => {
+    const userMessage = suggestedQuestion?.trim() || input.trim()
+    if (!userMessage || isLoading) return
 
-    const userMessage = input.trim()
     setInput("")
     setMessages((prev) => [...prev, { role: "user", content: userMessage }])
     setIsLoading(true)
@@ -158,9 +174,16 @@ export function ChatBot() {
       if (typeof assistantMessage !== "string" || !assistantMessage) {
         throw new Error("The assistant returned an invalid response.")
       }
+      const followUpQuestions = Array.isArray(result?.follow_up_questions)
+        ? result.follow_up_questions
+            .filter((question: unknown): question is string => typeof question === "string")
+            .map((question: string) => question.trim())
+            .filter(Boolean)
+            .slice(0, 3)
+        : []
       if (conversationUserId.current !== data.session.user.id) return
 
-      setMessages((prev) => [...prev, { role: "assistant", content: assistantMessage }])
+      setMessages((prev) => [...prev, { role: "assistant", content: assistantMessage, followUpQuestions }])
     } catch (error) {
       const message = error instanceof Error ? error.message : "The assistant could not complete that search."
       if (conversationUserId.current === requestUserId) {
@@ -275,7 +298,7 @@ export function ChatBot() {
                       "group flex flex-col rounded-lg p-4 text-sm shadow-sm transition-all relative",
                       m.role === "user"
                         ? "ml-auto bg-primary text-primary-foreground max-w-[85%] sm:max-w-[80%]"
-                        : "bg-muted text-foreground border border-border max-w-[95%] sm:max-w-[90%]"
+                        : "bg-slate-100 text-slate-950 border border-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 max-w-[95%] sm:max-w-[90%]"
                     )}
                   >
                     <div className="flex items-center justify-between mb-2">
@@ -297,10 +320,32 @@ export function ChatBot() {
                     <div className={cn(
                       "prose prose-sm max-w-none break-words",
                       (isFullScreen || typeof window !== 'undefined' && window.innerWidth < 640) ? "prose-base" : "",
-                      m.role === "user" ? "prose-invert" : "prose-slate dark:prose-invert"
+                      m.role === "user"
+                        ? "prose-invert"
+                        : "prose-slate prose-headings:text-slate-950 prose-p:text-slate-900 prose-li:text-slate-900 prose-strong:text-slate-950 prose-th:text-slate-900 prose-td:text-slate-900 dark:prose-invert dark:prose-headings:text-white dark:prose-p:text-slate-100 dark:prose-li:text-slate-100 dark:prose-strong:text-white dark:prose-th:text-slate-100 dark:prose-td:text-slate-100"
                     )}>
                       <MarkdownContent content={m.content} isFullScreen={isFullScreen} />
                     </div>
+                    {m.role === "assistant" && !!m.followUpQuestions?.length && (
+                      <div className="mt-3 space-y-2 border-t border-slate-300 pt-3 dark:border-slate-600">
+                        <p className="text-xs font-medium text-slate-700 dark:text-slate-300">You could also ask</p>
+                        <div className="flex flex-wrap gap-2">
+                          {m.followUpQuestions.map((question, questionIndex) => (
+                            <Button
+                              key={`${question}-${questionIndex}`}
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={isLoading}
+                              className="h-auto whitespace-normal border-slate-400 bg-white text-left text-slate-900 hover:bg-slate-200 hover:text-slate-950 dark:border-slate-500 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600 dark:hover:text-white"
+                              onClick={() => handleSend(question)}
+                            >
+                              {question}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
                 {isLoading && (

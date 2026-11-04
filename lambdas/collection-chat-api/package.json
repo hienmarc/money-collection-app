@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "build": "esbuild handler.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/handler.js",
-    "test": "mkdir -p dist && esbuild sql-validation.test.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/sql-validation.test.js && node --test dist/sql-validation.test.js",
+    "test": "mkdir -p dist && esbuild sql-validation.test.ts chat-answer.test.ts --bundle --platform=node --target=node22 --format=cjs --outdir=dist && node --test dist/sql-validation.test.js dist/chat-answer.test.js",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
