@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { parseChatAnswer } from "./chat-answer"
+import { filterUnknownBanknoteImages, parseChatAnswer } from "./chat-answer"
 
 test("parses an answer with follow-up questions", () => {
   assert.deepEqual(
@@ -34,4 +34,25 @@ test("accepts fenced JSON and falls back to plain markdown", () => {
     answer: "**Here is your result.**",
     followUpQuestions: [],
   })
+})
+
+test("keeps only Markdown images whose URLs belong to returned banknotes", () => {
+  const frontImage = "https://images.example.com/front.jpg"
+  const backImage = "https://images.example.com/back.jpg"
+  const answer = [
+    `![Front of the banknote](${frontImage})`,
+    `![Back of the banknote](${backImage})`,
+    "![Unrelated image](https://images.example.com/other.jpg)",
+    "![Unsafe image](javascript:alert(1))",
+  ].join("\n")
+
+  assert.equal(
+    filterUnknownBanknoteImages(answer, [{ front_image: frontImage, back_image: backImage }]),
+    [
+      `![Front of the banknote](${frontImage})`,
+      `![Back of the banknote](${backImage})`,
+      "",
+      "",
+    ].join("\n"),
+  )
 })

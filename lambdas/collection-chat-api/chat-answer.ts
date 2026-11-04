@@ -3,6 +3,34 @@ export interface ChatAnswer {
   followUpQuestions: string[]
 }
 
+export function filterUnknownBanknoteImages(
+  answer: string,
+  rows: Record<string, unknown>[],
+): string {
+  const imageUrls = new Set(
+    rows.flatMap((row) =>
+      [row.front_image, row.back_image].filter(
+        (url): url is string => typeof url === "string" && url.length > 0,
+      ),
+    ),
+  )
+
+  return answer.replace(
+    /!\[([^\]]*)\]\(((?:[^()\s]|\([^()\s]*\))*)\)/g,
+    (markdown, _alt: string, url: string) => {
+      try {
+        const parsedUrl = new URL(url, "https://chatbot.invalid")
+        if (imageUrls.has(url) && ["http:", "https:"].includes(parsedUrl.protocol)) {
+          return markdown
+        }
+      } catch {
+        return ""
+      }
+      return ""
+    },
+  )
+}
+
 export function parseChatAnswer(text: string): ChatAnswer {
   const trimmed = text.trim()
   const jsonText = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i)?.[1]?.trim() ?? trimmed

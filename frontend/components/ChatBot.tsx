@@ -208,6 +208,11 @@ export function ChatBot() {
     })
   }
 
+  const latestAssistantMessageIndex = messages.reduce(
+    (latestIndex, message, index) => message.role === "assistant" ? index : latestIndex,
+    -1,
+  )
+
   return (
     <div className={cn(
       "z-50 transition-all duration-300",
@@ -326,7 +331,7 @@ export function ChatBot() {
                     )}>
                       <MarkdownContent content={m.content} isFullScreen={isFullScreen} />
                     </div>
-                    {m.role === "assistant" && !!m.followUpQuestions?.length && (
+                    {m.role === "assistant" && i === latestAssistantMessageIndex && !!m.followUpQuestions?.length && (
                       <div className="mt-3 space-y-2 border-t border-slate-300 pt-3 dark:border-slate-600">
                         <p className="text-xs font-medium text-slate-700 dark:text-slate-300">You could also ask</p>
                         <div className="flex flex-wrap gap-2">
