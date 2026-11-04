@@ -151,7 +151,29 @@ data "aws_iam_policy_document" "apply_pipeline_permissions" {
   }
 
   statement {
-    sid    = "ManageImageSearchApiGateway"
+    sid    = "ManageCollectionChatSecret"
+    effect = "Allow"
+    actions = [
+      "secretsmanager:CreateSecret",
+      "secretsmanager:DeleteSecret",
+      "secretsmanager:DescribeSecret",
+      "secretsmanager:GetResourcePolicy",
+      "secretsmanager:GetSecretValue",
+      "secretsmanager:ListSecretVersionIds",
+      "secretsmanager:PutSecretValue",
+      "secretsmanager:RestoreSecret",
+      "secretsmanager:TagResource",
+      "secretsmanager:UntagResource",
+      "secretsmanager:UpdateSecret",
+      "secretsmanager:UpdateSecretVersionStage",
+    ]
+    resources = [
+      "arn:aws:secretsmanager:${var.aws_region}:${data.aws_caller_identity.current.account_id}:secret:${var.aws_resource_prefix}-*-collection-chat-db-*",
+    ]
+  }
+
+  statement {
+    sid    = "ManageApplicationApiGateway"
     effect = "Allow"
     actions = [
       "apigateway:GET",

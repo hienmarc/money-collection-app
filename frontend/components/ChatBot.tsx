@@ -28,10 +28,17 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { toast } from "@/components/ui/use-toast"
+import { createClient } from "@/utils/supabase/client"
 
 interface Message {
   role: "user" | "assistant"
   content: string
+}
+
+const apiUrl = process.env.NEXT_PUBLIC_IMAGE_SEARCH_API_URL?.replace(/\/$/, "")
+const welcomeMessage: Message = {
+  role: "assistant",
+  content: "Hello! I'm your collection assistant. How can I help you today?",
 }
 
 const MarkdownContent = ({ content, isFullScreen }: { content: string; isFullScreen: boolean }) => {
@@ -83,6 +90,20 @@ export function ChatBot() {
   const [isLoading, setIsLoading] = useState(false)
   const [copiedId, setCopiedId] = useState<number | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const conversationUserId = useRef<string | null>(null)
+
+  useEffect(() => {
+    const supabase = createClient()
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const userId = session?.user.id ?? null
+      if (conversationUserId.current !== userId) {
+        conversationUserId.current = userId
+        setMessages([welcomeMessage])
+        setInput("")
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [])
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -101,26 +122,50 @@ export function ChatBot() {
     setMessages((prev) => [...prev, { role: "user", content: userMessage }])
     setIsLoading(true)
 
+    let requestUserId: string | null = null
     try {
-      const chatEndpoint = process.env.NEXT_PUBLIC_CHAT_ENDPOINT
-      if (!chatEndpoint) throw new Error("Chat endpoint is not defined")
-      const response = await fetch(chatEndpoint, {
+      const supabase = createClient()
+      const { data, error } = await supabase.auth.getSession()
+      if (error) throw error
+      if (!data.session) throw new Error("Sign in to use the collection assistant.")
+      requestUserId = data.session.user.id
+      if (!apiUrl) throw new Error("The collection assistant is not configured.")
+
+      const sameUserConversation = conversationUserId.current === data.session.user.id
+      if (!sameUserConversation) {
+        conversationUserId.current = data.session.user.id
+        setMessages([welcomeMessage])
+      }
+
+      const response = await fetch(`${apiUrl}/v1/chat`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "content-type": "application/json",
+          authorization: `Bearer ${data.session.access_token}`,
         },
-        body: JSON.stringify({ message: userMessage }),
+        body: JSON.stringify({
+          question: userMessage,
+          history: (sameUserConversation ? messages : []).slice(-3).map((message) => ({
+            role: message.role,
+            content: message.content.slice(-1000),
+          })),
+        }),
       })
 
-      if (!response.ok) throw new Error("Failed to get response")
-
-      const data = await response.json()
-      const assistantMessage = data.message || data.response || "I'm sorry, I couldn't process that."
+      const result = await response.json().catch(() => null)
+      if (!response.ok) throw new Error(result?.error || "Failed to get a response.")
+      const assistantMessage = result?.answer
+      if (typeof assistantMessage !== "string" || !assistantMessage) {
+        throw new Error("The assistant returned an invalid response.")
+      }
+      if (conversationUserId.current !== data.session.user.id) return
 
       setMessages((prev) => [...prev, { role: "assistant", content: assistantMessage }])
     } catch (error) {
-      console.error("Chat error:", error)
-      setMessages((prev) => [...prev, { role: "assistant", content: "Sorry, I encountered an error connecting to the assistant." }])
+      const message = error instanceof Error ? error.message : "The assistant could not complete that search."
+      if (conversationUserId.current === requestUserId) {
+        setMessages((prev) => [...prev, { role: "assistant", content: message }])
+      }
     } finally {
       setIsLoading(false)
     }
@@ -128,7 +173,7 @@ export function ChatBot() {
 
   const startNewChat = () => {
     if (window.confirm("Are you sure you want to start a new conversation?")) {
-      setMessages([{ role: "assistant", content: "Hello again! I'm ready for a new conversation. How can I help you?" }])
+      setMessages([welcomeMessage])
     }
   }
 
@@ -277,6 +322,7 @@ export function ChatBot() {
                 placeholder="Ask about your collection..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
+                maxLength={1000}
                 className={cn(
                   "flex-1",
                   (isFullScreen || typeof window !== 'undefined' && window.innerWidth < 640) ? "h-12 text-base" : "h-10 text-sm"

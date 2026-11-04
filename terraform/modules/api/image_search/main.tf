@@ -106,13 +106,13 @@ resource "aws_dynamodb_table" "jobs" {
 
 data "archive_file" "api" {
   type        = "zip"
-  source_dir  = "${path.module}/../../../lambdas/image-search-api/dist"
+  source_dir  = "${path.module}/../../../../lambdas/image-search-api/dist"
   output_path = "${path.root}/.terraform/image-search-api.zip"
 }
 
 data "archive_file" "processor" {
   type        = "zip"
-  source_dir  = "${path.module}/../../../lambdas/image-search-processor"
+  source_dir  = "${path.module}/../../../../lambdas/image-search-processor"
   output_path = "${path.root}/.terraform/image-search-processor.zip"
   excludes    = ["__pycache__/**", "*.pyc"]
 }
@@ -302,20 +302,8 @@ resource "aws_s3_bucket_notification" "images" {
   depends_on = [aws_lambda_permission.s3_invoke_processor]
 }
 
-resource "aws_apigatewayv2_api" "image_search" {
-  name          = "${local.prefix}-${var.environment}-api"
-  protocol_type = "HTTP"
-  cors_configuration {
-    allow_headers = ["authorization", "content-type"]
-    allow_methods = ["GET", "POST", "DELETE", "OPTIONS"]
-    allow_origins = ["*"]
-    max_age       = 3600
-  }
-  tags = local.common_tags
-}
-
 resource "aws_apigatewayv2_integration" "api" {
-  api_id                 = aws_apigatewayv2_api.image_search.id
+  api_id                 = var.api_id
   integration_type       = "AWS_PROXY"
   integration_uri        = aws_lambda_function.api.invoke_arn
   integration_method     = "POST"
@@ -329,20 +317,9 @@ resource "aws_apigatewayv2_route" "image_search" {
     "GET /v1/image-searches/{jobId}",
     "DELETE /v1/image-searches/{jobId}",
   ])
-  api_id    = aws_apigatewayv2_api.image_search.id
+  api_id    = var.api_id
   route_key = each.value
   target    = "integrations/${aws_apigatewayv2_integration.api.id}"
-}
-
-resource "aws_apigatewayv2_stage" "default" {
-  api_id      = aws_apigatewayv2_api.image_search.id
-  name        = "$default"
-  auto_deploy = true
-  default_route_settings {
-    throttling_burst_limit = 20
-    throttling_rate_limit  = 10
-  }
-  tags = local.common_tags
 }
 
 resource "aws_lambda_permission" "api_invoke" {
@@ -350,5 +327,5 @@ resource "aws_lambda_permission" "api_invoke" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.api.arn
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.image_search.execution_arn}/*/*"
+  source_arn    = "${var.api_execution_arn}/*/*"
 }
