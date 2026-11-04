@@ -59,10 +59,11 @@ def clean_value(value):
 
 
 def build_search_query(identification):
+    currency_or_country = identification.get("currency") or identification.get("country")
     return " ".join(
-        identification[field]
-        for field in ("face_value", "currency", "country", "year")
-        if identification.get(field)
+        value
+        for value in (identification.get("face_value"), currency_or_country, identification.get("year"))
+        if value
     )
 
 
