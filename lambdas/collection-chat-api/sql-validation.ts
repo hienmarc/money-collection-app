@@ -27,6 +27,7 @@ const safeFunctions = new Set([
   "sum",
   "to_char",
   "trim",
+  "unnest",
   "upper",
 ])
 

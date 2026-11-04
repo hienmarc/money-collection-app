@@ -43,6 +43,15 @@ test("allows filtering a country in the collection view", () => {
   )
 })
 
+test("allows counting banknotes by country using the scoped country array", () => {
+  assert.equal(
+    validateReadOnlyQuery(
+      "SELECT country_name, COUNT(*) AS quantity FROM public.chatbot_my_banknotes CROSS JOIN LATERAL unnest(country_names) AS country(country_name) GROUP BY country_name ORDER BY quantity DESC LIMIT 1",
+    ),
+    "SELECT country_name, COUNT(*) AS quantity FROM public.chatbot_my_banknotes CROSS JOIN LATERAL unnest(country_names) AS country(country_name) GROUP BY country_name ORDER BY quantity DESC LIMIT 1",
+  )
+})
+
 for (const query of [
   "SELECT COUNT(*) FROM chatbot_my_banknotes; DELETE FROM banknotes",
   "DELETE FROM chatbot_my_banknotes",
@@ -53,6 +62,7 @@ for (const query of [
   "SELECT pg_sleep(30) FROM chatbot_my_banknotes",
   "SELECT COUNT(*) FROM chatbot_my_banknotes FOR UPDATE",
   "SELECT 'banknotes'::regclass FROM chatbot_my_banknotes",
+  "SELECT generate_series(1, 1000000000) FROM chatbot_my_banknotes",
   "SELECT 1",
 ]) {
   test(`rejects unsafe SQL: ${query}`, () => {
