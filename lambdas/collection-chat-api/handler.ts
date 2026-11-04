@@ -2,7 +2,7 @@ import type { APIGatewayProxyEventV2, APIGatewayProxyStructuredResultV2 } from "
 import { ConverseCommand, BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime"
 import { GetSecretValueCommand, SecretsManagerClient } from "@aws-sdk/client-secrets-manager"
 import { Client } from "pg"
-import { UnsafeQueryError, validateReadOnlyQuery } from "./sql-validation"
+import { extractSql, UnsafeQueryError, validateReadOnlyQuery } from "./sql-validation"
 
 const bedrock = new BedrockRuntimeClient({})
 const secrets = new SecretsManagerClient({})
@@ -200,23 +200,37 @@ async function runQuery(userId: string, sql: string): Promise<Record<string, unk
 }
 
 export async function handler(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyStructuredResultV2> {
+  let stage = "route_validation"
   try {
     if (event.requestContext.http.method !== "POST" || event.rawPath.replace(/\/$/, "") !== "/v1/chat") {
       return response(404, { error: "Route not found." })
     }
 
+    stage = "authentication"
     const user = await authenticate(event)
     const { question, history } = parseQuestion(event)
     let sql: string
+    stage = "bedrock_sql_generation"
+    const generatedSql = await askBedrock(question, history)
+    stage = "sql_validation"
     try {
-      sql = validateReadOnlyQuery(await askBedrock(question, history))
+      sql = validateReadOnlyQuery(extractSql(generatedSql))
     } catch (error) {
       if (error instanceof UnsafeQueryError) {
+        console.warn(JSON.stringify({
+          event: "chat_sql_validation_failed",
+          requestId: event.requestContext.requestId,
+          reason: error.message,
+          generatedOutputLength: generatedSql.length,
+          generatedOutputWasFenced: generatedSql.trim().startsWith("```"),
+        }))
         throw new ApiError(422, "I could not create a safe search from that question. Please rephrase it.")
       }
       throw error
     }
+    stage = "database_query"
     const rows = await runQuery(user.id, sql)
+    stage = "bedrock_answer_generation"
     const answer = await askBedrock(question, history, rows)
 
     return response(200, { answer })
@@ -224,6 +238,8 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
     if (error instanceof ApiError) return response(error.statusCode, { error: error.message })
 
     console.error("Collection chatbot request failed.", {
+      requestId: event.requestContext.requestId,
+      stage,
       errorName: error instanceof Error ? error.name : "UnknownError",
       errorCode: error && typeof error === "object" && "code" in error ? error.code : undefined,
     })

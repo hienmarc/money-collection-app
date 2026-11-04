@@ -126,6 +126,33 @@ export class UnsafeQueryError extends Error {
   }
 }
 
+export function extractSql(text: string): string {
+  let sql = text.trim().replace(/^\uFEFF/, "")
+  const fenced = sql.match(/^```(?:sql|postgres|postgresql)?\s*([\s\S]*?)\s*```$/i)
+  if (fenced) sql = fenced[1].trim()
+
+  const labeled = sql.match(/^sql\s*:\s*([\s\S]+)$/i)
+  if (labeled) sql = labeled[1].trim()
+
+  if (sql.startsWith("{")) {
+    try {
+      const parsed: unknown = JSON.parse(sql)
+      if (
+        parsed &&
+        typeof parsed === "object" &&
+        "sql" in parsed &&
+        typeof parsed.sql === "string"
+      ) {
+        sql = parsed.sql.trim()
+      }
+    } catch {
+      throw new UnsafeQueryError("The generated SQL response contains malformed JSON.")
+    }
+  }
+
+  return sql
+}
+
 export function validateReadOnlyQuery(sql: string): string {
   let statements: ReturnType<typeof parse>
   try {

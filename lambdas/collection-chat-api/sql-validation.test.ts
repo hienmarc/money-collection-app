@@ -1,6 +1,20 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { UnsafeQueryError, validateReadOnlyQuery } from "./sql-validation"
+import { extractSql, UnsafeQueryError, validateReadOnlyQuery } from "./sql-validation"
+
+test("extracts SQL from common Bedrock response wrappers", () => {
+  assert.equal(extractSql("```sql\nSELECT COUNT(*) FROM chatbot_my_banknotes;\n```"), "SELECT COUNT(*) FROM chatbot_my_banknotes;")
+  assert.equal(extractSql("SQL: SELECT COUNT(*) FROM chatbot_my_banknotes;"), "SELECT COUNT(*) FROM chatbot_my_banknotes;")
+  assert.equal(extractSql('{"sql":"SELECT COUNT(*) FROM chatbot_my_banknotes;"}'), "SELECT COUNT(*) FROM chatbot_my_banknotes;")
+  assert.equal(extractSql("SELECT COUNT(*) FROM chatbot_my_banknotes;"), "SELECT COUNT(*) FROM chatbot_my_banknotes;")
+})
+
+test("validates SQL returned in a fenced Bedrock response", () => {
+  assert.equal(
+    validateReadOnlyQuery(extractSql("```sql\nSELECT COUNT(*) FROM public.chatbot_my_banknotes;\n```")),
+    "SELECT COUNT(*) FROM public.chatbot_my_banknotes",
+  )
+})
 
 test("allows a scoped banknote count query", () => {
   assert.equal(
