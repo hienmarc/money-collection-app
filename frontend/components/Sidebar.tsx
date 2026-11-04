@@ -11,6 +11,7 @@ import {
   Archive,
   Settings,
   Search,
+  Image as ImageIcon,
   DollarSign,
   Users,
 } from "lucide-react"
@@ -29,6 +30,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
   const navItems = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
     { name: "Catalog", href: "/catalog", icon: Search },
+    { name: "Image Search", href: "/image-search", icon: ImageIcon },
     { name: "Banknotes", href: "/banknotes", icon: BanknoteIcon },
     { name: "Collection Value", href: "/collection-value", icon: DollarSign },
     { name: "Currencies", href: "/currencies", icon: Coins },

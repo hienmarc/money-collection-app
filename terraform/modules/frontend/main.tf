@@ -1,13 +1,14 @@
 locals {
   target = var.environment == "prod" ? "production" : "preview"
   environment_variables = {
-    NEXT_PUBLIC_SUPABASE_URL      = { value = "https://${var.supabase_project_id}.supabase.co", sensitive = false }
-    NEXT_PUBLIC_SUPABASE_ANON_KEY = { value = var.supabase_anon_key, sensitive = false }
-    NUMISTA_API_KEY               = { value = var.numista_api_key, sensitive = true }
-    EXCHANGERATES_API_KEY         = { value = var.exchangerates_api_key, sensitive = true }
-    REST_COUNTRIES_API_KEY        = { value = var.rest_countries_api_key, sensitive = true }
-    UPSTASH_REDIS_REST_URL        = { value = var.redis_rest_url, sensitive = false }
-    UPSTASH_REDIS_REST_TOKEN      = { value = var.redis_rest_token, sensitive = true }
+    NEXT_PUBLIC_SUPABASE_URL         = { value = "https://${var.supabase_project_id}.supabase.co", sensitive = false }
+    NEXT_PUBLIC_SUPABASE_ANON_KEY    = { value = var.supabase_anon_key, sensitive = false }
+    NUMISTA_API_KEY                  = { value = var.numista_api_key, sensitive = true }
+    EXCHANGERATES_API_KEY            = { value = var.exchangerates_api_key, sensitive = true }
+    REST_COUNTRIES_API_KEY           = { value = var.rest_countries_api_key, sensitive = true }
+    NEXT_PUBLIC_IMAGE_SEARCH_API_URL = { value = var.image_search_api_url, sensitive = false }
+    UPSTASH_REDIS_REST_URL           = { value = var.redis_rest_url, sensitive = false }
+    UPSTASH_REDIS_REST_TOKEN         = { value = var.redis_rest_token, sensitive = true }
   }
 }
 
