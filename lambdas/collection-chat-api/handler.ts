@@ -171,7 +171,8 @@ async function runQuery(userId: string, sql: string): Promise<Record<string, unk
     database: "postgres",
     user: dbUser,
     password: await getDatabasePassword(),
-    ssl: { rejectUnauthorized: true },
+    // Supabase's shared pooler requires TLS, but its chain is not trusted by the Lambda runtime.
+    ssl: { rejectUnauthorized: false },
     connectionTimeoutMillis: 5000,
     statement_timeout: statementTimeoutMs,
     application_name: "money-collection-chat",
