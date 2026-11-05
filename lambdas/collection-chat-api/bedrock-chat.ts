@@ -51,7 +51,8 @@ After using tools, return only a JSON object with exactly two properties:
 - "answer": a concise Markdown string in the user's language.
 - "follow_up_questions": an array of zero to three short, relevant follow-up questions.
 Questions must be specific to the results and not ask for information already fully given. Return an empty
-array if no useful follow-up exists.`
+array if no useful follow-up exists. Do not output reasoning, <thinking> or <response> tags, or any XML
+wrappers.`
 
 function extractText(message: BedrockMessage): string {
   const text = message.content?.flatMap((block) => ("text" in block && block.text ? [block.text] : [])).join("").trim()

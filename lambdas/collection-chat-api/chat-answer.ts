@@ -32,8 +32,12 @@ export function filterUnknownBanknoteImages(
 }
 
 export function parseChatAnswer(text: string): ChatAnswer {
-  const trimmed = text.trim()
-  const jsonText = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i)?.[1]?.trim() ?? trimmed
+  const withoutReasoning = text
+    .replace(/<(thinking|analysis|reasoning)\b[^>]*>[\s\S]*?<\/\1>/gi, "")
+    .trim()
+  const responseMatch = withoutReasoning.match(/<response\b[^>]*>([\s\S]*?)<\/response>/i)
+  const responseText = responseMatch?.[1].trim() ?? withoutReasoning
+  const jsonText = responseText.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i)?.[1]?.trim() ?? responseText
 
   try {
     const parsed: unknown = JSON.parse(jsonText)
@@ -49,8 +53,8 @@ export function parseChatAnswer(text: string): ChatAnswer {
       return { answer: parsed.answer, followUpQuestions }
     }
   } catch {
-    return { answer: trimmed, followUpQuestions: [] }
+    return { answer: responseText, followUpQuestions: [] }
   }
 
-  return { answer: trimmed, followUpQuestions: [] }
+  return { answer: responseText, followUpQuestions: [] }
 }

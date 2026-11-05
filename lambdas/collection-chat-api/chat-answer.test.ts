@@ -36,6 +36,29 @@ test("accepts fenced JSON and falls back to plain markdown", () => {
   })
 })
 
+test("extracts JSON from a response wrapper and omits the model's thinking section", () => {
+  assert.deepEqual(
+    parseChatAnswer(`<thinking>I will now format this information for the user.</thinking>
+<response>
+{
+  "answer": "Your oldest banknote is a **5.00 Canadian Dollar** from **1954**.",
+  "follow_up_questions": ["Would you like more details?"]
+}
+</response>`),
+    {
+      answer: "Your oldest banknote is a **5.00 Canadian Dollar** from **1954**.",
+      followUpQuestions: ["Would you like more details?"],
+    },
+  )
+})
+
+test("removes reasoning and response tags around plain Markdown", () => {
+  assert.deepEqual(
+    parseChatAnswer("<thinking>Private reasoning.</thinking><response>**Here is your result.**</response>"),
+    { answer: "**Here is your result.**", followUpQuestions: [] },
+  )
+})
+
 test("keeps only Markdown images whose URLs belong to returned banknotes", () => {
   const frontImage = "https://images.example.com/front.jpg"
   const backImage = "https://images.example.com/back.jpg"
