@@ -137,6 +137,8 @@ async function askBedrock(
   question: string,
   history: ChatMessage[],
   rows?: Record<string, unknown>[],
+  readableSchema?: string,
+  queryError?: string,
 ): Promise<string> {
   const system = rows
     ? `You are a helpful banknote collection assistant.
@@ -168,8 +170,9 @@ async function askBedrock(
        with no markdown or explanation.
 
        You may read any table or view that the authenticated database role can select from. The database
-       enforces the user's permissions and row-level security. Use any appropriate tables, schemas,
-       joins, subqueries, CTEs, aggregations, filters, grouping, and ordering to answer the question.
+       enforces the user's permissions and row-level security. Use only the relations and columns listed
+       in the available schema. Use any appropriate joins, subqueries, CTEs, aggregations, filters,
+       grouping, and ordering to answer the question.
        Include banknote image columns when selecting specific banknotes so their images can be displayed.
 
        The query must be a read-only SELECT. Do not modify data or session settings, change roles or
@@ -182,13 +185,13 @@ async function askBedrock(
   const conversation = history.map((message) => `${message.role}: ${message.content}`).join("\n")
   const userContent = rows
     ? `Recent conversation (context only):\n${conversation || "(none)"}\n\nCurrent question: ${question}\n\nQuery results for the current question (JSON): ${JSON.stringify(rows)}`
-    : `Recent conversation (context only):\n${conversation || "(none)"}\n\nCurrent question: ${question}`
+    : `Available schema for the authenticated role:\n${readableSchema || "(No readable relations found.)"}\n\n${queryError ? `The previous query failed with this PostgreSQL error: ${queryError}\nCorrect it using only the schema above.\n\n` : ""}Recent conversation (context only):\n${conversation || "(none)"}\n\nCurrent question: ${question}`
   const result = await bedrock.send(
     new ConverseCommand({
       modelId,
       system: [{ text: system }],
       messages: [{ role: "user", content: [{ text: userContent }] }],
-      inferenceConfig: { maxTokens: rows ? 2000 : 300, temperature: 0 },
+      inferenceConfig: { maxTokens: rows ? 2000 : 1000, temperature: 0 },
     }),
   )
 
@@ -200,6 +203,64 @@ async function getDatabasePassword(): Promise<string> {
   const result = await secrets.send(new GetSecretValueCommand({ SecretId: dbSecretArn }))
   if (!result.SecretString) throw new Error("The database secret is empty.")
   return result.SecretString
+}
+
+async function beginAuthenticatedReadOnly(client: Client, userId: string): Promise<void> {
+  await client.query("BEGIN READ ONLY")
+  await client.query("SET LOCAL ROLE authenticated")
+  await client.query("SET LOCAL statement_timeout = '5000ms'")
+  await client.query(
+    "SELECT set_config('request.jwt.claims', $1, true), set_config('request.jwt.claim.sub', $2, true), set_config('request.jwt.claim.role', 'authenticated', true)",
+    [JSON.stringify({ sub: userId, role: "authenticated" }), userId],
+  )
+}
+
+async function getReadableSchema(userId: string): Promise<string> {
+  const client = new Client({
+    host: dbHost,
+    port: 6543,
+    database: "postgres",
+    user: dbUser,
+    password: await getDatabasePassword(),
+    ssl: { rejectUnauthorized: false },
+    connectionTimeoutMillis: 5000,
+    statement_timeout: statementTimeoutMs,
+    application_name: "money-collection-chat",
+  })
+
+  await client.connect()
+  try {
+    await beginAuthenticatedReadOnly(client, userId)
+    const result = await client.query<{
+      table_schema: string
+      table_name: string
+      table_type: string
+      column_name: string
+      data_type: string
+    }>(
+      `SELECT c.table_schema, c.table_name, t.table_type, c.column_name, c.data_type
+       FROM information_schema.columns AS c
+       JOIN information_schema.tables AS t
+         ON t.table_schema = c.table_schema AND t.table_name = c.table_name
+       WHERE c.table_schema NOT IN ('pg_catalog', 'information_schema')
+         AND t.table_type IN ('BASE TABLE', 'VIEW', 'FOREIGN')
+       ORDER BY c.table_schema, c.table_name, c.ordinal_position`,
+    )
+    const relations = new Map<string, string[]>()
+    for (const row of result.rows) {
+      const relation = `"${row.table_schema.replace(/"/g, '""')}"."${row.table_name.replace(/"/g, '""')}"`
+      const columns = relations.get(relation) ?? []
+      columns.push(`"${row.column_name.replace(/"/g, '""')}" ${row.data_type}`)
+      relations.set(relation, columns)
+    }
+    return [...relations].map(([relation, columns]) => `${relation}: ${columns.join(", ")}`).join("\n")
+  } finally {
+    try {
+      await client.query("ROLLBACK")
+    } finally {
+      await client.end()
+    }
+  }
 }
 
 async function runQuery(userId: string, sql: string): Promise<Record<string, unknown>[]> {
@@ -218,13 +279,7 @@ async function runQuery(userId: string, sql: string): Promise<Record<string, unk
 
   await client.connect()
   try {
-    await client.query("BEGIN READ ONLY")
-    await client.query("SET LOCAL ROLE authenticated")
-    await client.query("SET LOCAL statement_timeout = '5000ms'")
-    await client.query(
-      "SELECT set_config('request.jwt.claims', $1, true), set_config('request.jwt.claim.sub', $2, true), set_config('request.jwt.claim.role', 'authenticated', true)",
-      [JSON.stringify({ sub: userId, role: "authenticated" }), userId],
-    )
+    await beginAuthenticatedReadOnly(client, userId)
     const result = await client.query(
       `SELECT * FROM (${sql}) AS chatbot_result LIMIT ${maxRows}`,
     )
@@ -248,9 +303,11 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
     stage = "authentication"
     const user = await authenticate(event)
     const { question, history } = parseQuestion(event)
+    stage = "database_schema"
+    const readableSchema = await getReadableSchema(user.id)
     let sql: string
     stage = "bedrock_sql_generation"
-    const generatedSql = await askBedrock(question, history)
+    const generatedSql = await askBedrock(question, history, undefined, readableSchema)
     stage = "sql_validation"
     try {
       sql = validateReadOnlyQuery(extractSql(generatedSql))
@@ -268,7 +325,34 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
       throw error
     }
     stage = "database_query"
-    const rows = await runQuery(user.id, sql)
+    let rows: Record<string, unknown>[]
+    try {
+      rows = await runQuery(user.id, sql)
+    } catch (error) {
+      const errorCode = error && typeof error === "object" && "code" in error ? error.code : undefined
+      if (errorCode !== "42P01" && errorCode !== "42703") throw error
+
+      const errorMessage = error instanceof Error ? error.message.slice(0, 500) : String(errorCode)
+      stage = "bedrock_sql_repair"
+      const correctedOutput = await askBedrock(
+        question,
+        history,
+        undefined,
+        readableSchema,
+        `${String(errorCode)}: ${errorMessage}`,
+      )
+      stage = "sql_repair_validation"
+      try {
+        sql = validateReadOnlyQuery(extractSql(correctedOutput))
+      } catch (validationError) {
+        if (validationError instanceof UnsafeQueryError) {
+          throw new ApiError(422, "I could not create a safe search from that question. Please rephrase it.")
+        }
+        throw validationError
+      }
+      stage = "database_query_retry"
+      rows = await runQuery(user.id, sql)
+    }
     stage = "bedrock_answer_generation"
     const parsedAnswer = parseChatAnswer(await askBedrock(question, history, rows))
     const { answer, followUpQuestions } = {
