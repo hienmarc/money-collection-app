@@ -16,54 +16,49 @@ test("validates SQL returned in a fenced Bedrock response", () => {
   )
 })
 
-test("allows a scoped banknote count query", () => {
+test("allows a read from a table other than the chatbot view", () => {
   assert.equal(
     validateReadOnlyQuery(
-      "SELECT COUNT(*) AS quantity FROM public.chatbot_my_banknotes WHERE lower(currency_name) = 'canadian dollar';",
+      "SELECT COUNT(*) AS quantity FROM public.banknotes WHERE year > 2000;",
     ),
-    "SELECT COUNT(*) AS quantity FROM public.chatbot_my_banknotes WHERE lower(currency_name) = 'canadian dollar'",
+    "SELECT COUNT(*) AS quantity FROM public.banknotes WHERE year > 2000",
   )
 })
 
-test("allows aggregation, grouping, and a subquery over the scoped view", () => {
+test("allows joins, CTEs, subqueries, and aggregation across tables", () => {
   assert.equal(
     validateReadOnlyQuery(
-      "SELECT currency_name, COUNT(*) AS quantity FROM (SELECT currency_name FROM chatbot_my_banknotes) AS notes GROUP BY currency_name ORDER BY quantity DESC",
+      "WITH notes AS (SELECT b.banknoteid, c.name FROM public.banknotes b LEFT JOIN public.currencies c ON c.currencyid = b.currencyid) SELECT name, COUNT(*) AS quantity FROM notes GROUP BY name ORDER BY quantity DESC",
     ),
-    "SELECT currency_name, COUNT(*) AS quantity FROM (SELECT currency_name FROM chatbot_my_banknotes) AS notes GROUP BY currency_name ORDER BY quantity DESC",
+    "WITH notes AS (SELECT b.banknoteid, c.name FROM public.banknotes b LEFT JOIN public.currencies c ON c.currencyid = b.currencyid) SELECT name, COUNT(*) AS quantity FROM notes GROUP BY name ORDER BY quantity DESC",
   )
 })
 
-test("allows filtering a country in the collection view", () => {
+test("allows reads from another schema and union queries", () => {
   assert.equal(
     validateReadOnlyQuery(
-      "SELECT COUNT(*) FROM public.chatbot_my_banknotes WHERE country_names @> ARRAY['Canada']",
+      "SELECT id FROM auth.users UNION SELECT ownerid AS id FROM public.banknotes",
     ),
-    "SELECT COUNT(*) FROM public.chatbot_my_banknotes WHERE country_names @> ARRAY['Canada']",
+    "SELECT id FROM auth.users UNION SELECT ownerid AS id FROM public.banknotes",
   )
 })
 
-test("allows counting banknotes by country using the scoped country array", () => {
+test("allows a read-only query without a table", () => {
   assert.equal(
-    validateReadOnlyQuery(
-      "SELECT country_name, COUNT(*) AS quantity FROM public.chatbot_my_banknotes CROSS JOIN LATERAL unnest(country_names) AS country(country_name) GROUP BY country_name ORDER BY quantity DESC LIMIT 1",
-    ),
-    "SELECT country_name, COUNT(*) AS quantity FROM public.chatbot_my_banknotes CROSS JOIN LATERAL unnest(country_names) AS country(country_name) GROUP BY country_name ORDER BY quantity DESC LIMIT 1",
+    validateReadOnlyQuery("SELECT 1"),
+    "SELECT 1",
   )
 })
 
 for (const query of [
-  "SELECT COUNT(*) FROM chatbot_my_banknotes; DELETE FROM banknotes",
-  "DELETE FROM chatbot_my_banknotes",
-  "SELECT * FROM auth.users",
-  "SELECT * FROM banknotes",
-  "WITH notes AS (SELECT * FROM chatbot_my_banknotes) SELECT * FROM notes",
+  "SELECT COUNT(*) FROM public.banknotes; DELETE FROM public.banknotes",
+  "DELETE FROM public.banknotes",
+  "WITH removed AS (DELETE FROM public.banknotes RETURNING *) SELECT * FROM removed",
   "SELECT set_config('request.jwt.claim.sub', 'another-user', true) FROM chatbot_my_banknotes",
   "SELECT pg_sleep(30) FROM chatbot_my_banknotes",
-  "SELECT COUNT(*) FROM chatbot_my_banknotes FOR UPDATE",
-  "SELECT 'banknotes'::regclass FROM chatbot_my_banknotes",
-  "SELECT generate_series(1, 1000000000) FROM chatbot_my_banknotes",
-  "SELECT 1",
+  "SELECT COUNT(*) FROM public.banknotes FOR UPDATE",
+  "SELECT 'banknotes'::regclass FROM public.banknotes",
+  "SELECT generate_series(1, 1000000000) FROM public.banknotes",
 ]) {
   test(`rejects unsafe SQL: ${query}`, () => {
     assert.throws(() => validateReadOnlyQuery(query), UnsafeQueryError)

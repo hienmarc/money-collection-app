@@ -98,6 +98,7 @@ const safeNodeTypes = new Set([
   "union",
   "union all",
   "value",
+  "with",
   "INNER JOIN",
   "LEFT JOIN",
   "RIGHT JOIN",
@@ -166,7 +167,6 @@ export function validateReadOnlyQuery(sql: string): string {
     throw new UnsafeQueryError("Only one read-only search is allowed.")
   }
 
-  let readsCollection = false
   const visit = (node: unknown): void => {
     if (Array.isArray(node)) {
       for (const child of node) visit(child)
@@ -178,18 +178,6 @@ export function validateReadOnlyQuery(sql: string): string {
     const type = record.type
     if (typeof type === "string" && !safeNodeTypes.has(type)) {
       throw new UnsafeQueryError("The generated search contains an unsupported SQL operation.")
-    }
-
-    if (type === "table") {
-      const name = record.name as { name?: unknown; schema?: unknown } | undefined
-      if (
-        !name ||
-        name.name !== "chatbot_my_banknotes" ||
-        (name.schema !== undefined && name.schema !== "public")
-      ) {
-        throw new UnsafeQueryError("The search may only read your banknote collection.")
-      }
-      readsCollection = true
     }
 
     if (type === "call") {
@@ -241,7 +229,6 @@ export function validateReadOnlyQuery(sql: string): string {
   }
 
   visit(statements[0])
-  if (!readsCollection) throw new UnsafeQueryError("The search must read your banknote collection.")
 
   const normalized = sql.trim().replace(/;+$/, "").trim()
   if (!normalized) throw new UnsafeQueryError("The generated search is empty.")

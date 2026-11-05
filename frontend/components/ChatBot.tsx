@@ -3,8 +3,8 @@
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Textarea } from "@/components/ui/textarea"
 import {
   MessageCircle,
   Send,
@@ -106,7 +106,17 @@ export function ChatBot() {
   const [isLoading, setIsLoading] = useState(false)
   const [copiedId, setCopiedId] = useState<number | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
   const conversationUserId = useRef<string | null>(null)
+
+  useEffect(() => {
+    const textarea = inputRef.current
+    if (!textarea) return
+
+    textarea.style.height = "auto"
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`
+    textarea.style.overflowY = textarea.scrollHeight > 160 ? "auto" : "hidden"
+  }, [input, isFullScreen])
 
   useEffect(() => {
     const supabase = createClient()
@@ -305,6 +315,9 @@ export function ChatBot() {
                         ? "ml-auto bg-primary text-primary-foreground max-w-[85%] sm:max-w-[80%]"
                         : "bg-slate-100 text-slate-950 border border-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 max-w-[95%] sm:max-w-[90%]"
                     )}
+                    style={{
+                      maxWidth: m.role === "user" ? "min(80%, 42rem)" : "min(90%, 48rem)",
+                    }}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2 opacity-70 text-[10px] uppercase font-bold tracking-wider">
@@ -354,7 +367,10 @@ export function ChatBot() {
                   </div>
                 ))}
                 {isLoading && (
-                  <div className="bg-muted text-muted-foreground max-w-[85%] rounded-lg p-3 text-sm animate-pulse flex items-center gap-2 border border-border shadow-sm">
+                  <div
+                    className="bg-muted text-muted-foreground max-w-[85%] rounded-lg p-3 text-sm animate-pulse flex items-center gap-2 border border-border shadow-sm"
+                    style={{ maxWidth: "min(90%, 48rem)" }}
+                  >
                     <Loader2 className="h-3 w-3 animate-spin text-primary" />
                     Assistant is thinking...
                   </div>
@@ -366,16 +382,24 @@ export function ChatBot() {
           <CardFooter className="p-4 border-t bg-background rounded-b-lg max-sm:rounded-none">
             <form
               onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-              className="flex w-full items-center space-x-2 max-w-4xl mx-auto"
+              className="flex w-full items-end space-x-2 max-w-4xl mx-auto"
             >
-              <Input
+              <Textarea
+                ref={inputRef}
                 placeholder="Ask about your collection..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+                    event.preventDefault()
+                    handleSend()
+                  }
+                }}
+                rows={1}
                 maxLength={1000}
                 className={cn(
-                  "flex-1",
-                  (isFullScreen || typeof window !== 'undefined' && window.innerWidth < 640) ? "h-12 text-base" : "h-10 text-sm"
+                  "flex-1 resize-none overflow-y-hidden min-h-10 max-h-40",
+                  (isFullScreen || typeof window !== 'undefined' && window.innerWidth < 640) ? "min-h-12 text-base" : "text-sm"
                 )}
                 disabled={isLoading}
               />
