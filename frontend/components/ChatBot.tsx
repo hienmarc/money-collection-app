@@ -3,8 +3,8 @@
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Textarea } from "@/components/ui/textarea"
 import {
   MessageCircle,
   Send,
@@ -19,6 +19,7 @@ import {
   Check
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import Link from "next/link"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import {
@@ -28,13 +29,21 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { toast } from "@/components/ui/use-toast"
+import { createClient } from "@/utils/supabase/client"
 
 interface Message {
   role: "user" | "assistant"
   content: string
+  followUpQuestions?: string[]
 }
 
-const MarkdownContent = ({ content, isFullScreen }: { content: string; isFullScreen: boolean }) => {
+const apiUrl = process.env.NEXT_PUBLIC_IMAGE_SEARCH_API_URL?.replace(/\/$/, "")
+const welcomeMessage: Message = {
+  role: "assistant",
+  content: "Hello! I'm your collection assistant. How can I help you today?",
+}
+
+const MarkdownContent = ({ content }: { content: string }) => {
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
@@ -42,18 +51,44 @@ const MarkdownContent = ({ content, isFullScreen }: { content: string; isFullScr
         img: ({ node, ...props }) => (
           <img
             {...props}
-            className={cn(
-              "rounded-md border border-border shadow-sm h-auto my-2",
-              isFullScreen ? "max-w-2xl" : "max-w-full"
-            )}
+            className="max-w-full rounded-md border border-border shadow-sm h-auto my-2"
             loading="lazy"
           />
         ),
-        a: ({ node, ...props }) => (
-          <a {...props} className="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer" />
-        ),
+        a: ({ node, href, children, ...props }) => {
+          const className = "text-blue-800 hover:underline dark:text-blue-300"
+          if (href?.startsWith("/banknotes/")) {
+            return <Link href={href} className={className}>{children}</Link>
+          }
+          return (
+            <a
+              {...props}
+              href={href}
+              className={className}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {children}
+            </a>
+          )
+        },
         p: ({ node, ...props }) => (
-          <p {...props} className="mb-2 last:mb-0 leading-relaxed" />
+          <p {...props} className="mb-2 last:mb-0 leading-relaxed text-slate-900 dark:text-slate-100" />
+        ),
+        h1: ({ node, ...props }) => (
+          <h1 {...props} className="text-slate-950 dark:text-white" />
+        ),
+        h2: ({ node, ...props }) => (
+          <h2 {...props} className="text-slate-950 dark:text-white" />
+        ),
+        h3: ({ node, ...props }) => (
+          <h3 {...props} className="text-slate-950 dark:text-white" />
+        ),
+        li: ({ node, ...props }) => (
+          <li {...props} className="text-slate-900 dark:text-slate-100" />
+        ),
+        strong: ({ node, ...props }) => (
+          <strong {...props} className="font-semibold text-slate-950 dark:text-white" />
         ),
         table: ({ node, ...props }) => (
           <div className="my-4 overflow-x-auto rounded-xl border bg-card shadow-sm">
@@ -83,6 +118,30 @@ export function ChatBot() {
   const [isLoading, setIsLoading] = useState(false)
   const [copiedId, setCopiedId] = useState<number | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
+  const conversationUserId = useRef<string | null>(null)
+
+  useEffect(() => {
+    const textarea = inputRef.current
+    if (!textarea) return
+
+    textarea.style.height = "auto"
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`
+    textarea.style.overflowY = textarea.scrollHeight > 160 ? "auto" : "hidden"
+  }, [input, isFullScreen])
+
+  useEffect(() => {
+    const supabase = createClient()
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const userId = session?.user.id ?? null
+      if (conversationUserId.current !== userId) {
+        conversationUserId.current = userId
+        setMessages([welcomeMessage])
+        setInput("")
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [])
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -93,34 +152,65 @@ export function ChatBot() {
     }
   }, [messages, isLoading])
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return
+  const handleSend = async (suggestedQuestion?: string) => {
+    const userMessage = suggestedQuestion?.trim() || input.trim()
+    if (!userMessage || isLoading) return
 
-    const userMessage = input.trim()
     setInput("")
     setMessages((prev) => [...prev, { role: "user", content: userMessage }])
     setIsLoading(true)
 
+    let requestUserId: string | null = null
     try {
-      const chatEndpoint = process.env.NEXT_PUBLIC_CHAT_ENDPOINT
-      if (!chatEndpoint) throw new Error("Chat endpoint is not defined")
-      const response = await fetch(chatEndpoint, {
+      const supabase = createClient()
+      const { data, error } = await supabase.auth.getSession()
+      if (error) throw error
+      if (!data.session) throw new Error("Sign in to use the collection assistant.")
+      requestUserId = data.session.user.id
+      if (!apiUrl) throw new Error("The collection assistant is not configured.")
+
+      const sameUserConversation = conversationUserId.current === data.session.user.id
+      if (!sameUserConversation) {
+        conversationUserId.current = data.session.user.id
+        setMessages([welcomeMessage])
+      }
+
+      const response = await fetch(`${apiUrl}/v1/chat`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "content-type": "application/json",
+          authorization: `Bearer ${data.session.access_token}`,
         },
-        body: JSON.stringify({ message: userMessage }),
+        body: JSON.stringify({
+          question: userMessage,
+          history: (sameUserConversation ? messages : []).slice(-3).map((message) => ({
+            role: message.role,
+            content: message.content.slice(-1000),
+          })),
+        }),
       })
 
-      if (!response.ok) throw new Error("Failed to get response")
+      const result = await response.json().catch(() => null)
+      if (!response.ok) throw new Error(result?.error || "Failed to get a response.")
+      const assistantMessage = result?.answer
+      if (typeof assistantMessage !== "string" || !assistantMessage) {
+        throw new Error("The assistant returned an invalid response.")
+      }
+      const followUpQuestions = Array.isArray(result?.follow_up_questions)
+        ? result.follow_up_questions
+            .filter((question: unknown): question is string => typeof question === "string")
+            .map((question: string) => question.trim())
+            .filter(Boolean)
+            .slice(0, 3)
+        : []
+      if (conversationUserId.current !== data.session.user.id) return
 
-      const data = await response.json()
-      const assistantMessage = data.message || data.response || "I'm sorry, I couldn't process that."
-
-      setMessages((prev) => [...prev, { role: "assistant", content: assistantMessage }])
+      setMessages((prev) => [...prev, { role: "assistant", content: assistantMessage, followUpQuestions }])
     } catch (error) {
-      console.error("Chat error:", error)
-      setMessages((prev) => [...prev, { role: "assistant", content: "Sorry, I encountered an error connecting to the assistant." }])
+      const message = error instanceof Error ? error.message : "The assistant could not complete that search."
+      if (conversationUserId.current === requestUserId) {
+        setMessages((prev) => [...prev, { role: "assistant", content: message }])
+      }
     } finally {
       setIsLoading(false)
     }
@@ -128,7 +218,7 @@ export function ChatBot() {
 
   const startNewChat = () => {
     if (window.confirm("Are you sure you want to start a new conversation?")) {
-      setMessages([{ role: "assistant", content: "Hello again! I'm ready for a new conversation. How can I help you?" }])
+      setMessages([welcomeMessage])
     }
   }
 
@@ -139,6 +229,11 @@ export function ChatBot() {
       setTimeout(() => setCopiedId(null), 2000)
     })
   }
+
+  const latestAssistantMessageIndex = messages.reduce(
+    (latestIndex, message, index) => message.role === "assistant" ? index : latestIndex,
+    -1,
+  )
 
   return (
     <div className={cn(
@@ -229,9 +324,12 @@ export function ChatBot() {
                     className={cn(
                       "group flex flex-col rounded-lg p-4 text-sm shadow-sm transition-all relative",
                       m.role === "user"
-                        ? "ml-auto bg-primary text-primary-foreground max-w-[85%] sm:max-w-[80%]"
-                        : "bg-muted text-foreground border border-border max-w-[95%] sm:max-w-[90%]"
+                        ? "ml-auto bg-primary text-primary-foreground max-w-[350px]"
+                        : "bg-slate-100 text-slate-950 border border-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 max-w-[350px]"
                     )}
+                    style={{
+                      maxWidth: "min(90%, 350px)",
+                    }}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2 opacity-70 text-[10px] uppercase font-bold tracking-wider">
@@ -252,14 +350,39 @@ export function ChatBot() {
                     <div className={cn(
                       "prose prose-sm max-w-none break-words",
                       (isFullScreen || typeof window !== 'undefined' && window.innerWidth < 640) ? "prose-base" : "",
-                      m.role === "user" ? "prose-invert" : "prose-slate dark:prose-invert"
+                      m.role === "user"
+                        ? "prose-invert"
+                        : "prose-slate prose-headings:text-slate-950 prose-p:text-slate-900 prose-li:text-slate-900 prose-strong:text-slate-950 prose-th:text-slate-900 prose-td:text-slate-900 dark:prose-invert dark:prose-headings:text-white dark:prose-p:text-slate-100 dark:prose-li:text-slate-100 dark:prose-strong:text-white dark:prose-th:text-slate-100 dark:prose-td:text-slate-100"
                     )}>
-                      <MarkdownContent content={m.content} isFullScreen={isFullScreen} />
+                      <MarkdownContent content={m.content} />
                     </div>
+                    {m.role === "assistant" && i === latestAssistantMessageIndex && !!m.followUpQuestions?.length && (
+                      <div className="mt-3 space-y-2 border-t border-slate-300 pt-3 dark:border-slate-600">
+                        <p className="text-xs font-medium text-slate-700 dark:text-slate-300">You could also ask</p>
+                        <div className="flex flex-wrap gap-2">
+                          {m.followUpQuestions.map((question, questionIndex) => (
+                            <Button
+                              key={`${question}-${questionIndex}`}
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={isLoading}
+                              className="h-auto whitespace-normal border-slate-400 bg-white text-left text-slate-900 hover:bg-slate-200 hover:text-slate-950 dark:border-slate-500 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600 dark:hover:text-white"
+                              onClick={() => handleSend(question)}
+                            >
+                              {question}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
                 {isLoading && (
-                  <div className="bg-muted text-muted-foreground max-w-[85%] rounded-lg p-3 text-sm animate-pulse flex items-center gap-2 border border-border shadow-sm">
+                  <div
+                    className="bg-muted text-muted-foreground max-w-[350px] rounded-lg p-3 text-sm animate-pulse flex items-center gap-2 border border-border shadow-sm"
+                    style={{ maxWidth: "min(90%, 350px)" }}
+                  >
                     <Loader2 className="h-3 w-3 animate-spin text-primary" />
                     Assistant is thinking...
                   </div>
@@ -271,15 +394,24 @@ export function ChatBot() {
           <CardFooter className="p-4 border-t bg-background rounded-b-lg max-sm:rounded-none">
             <form
               onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-              className="flex w-full items-center space-x-2 max-w-4xl mx-auto"
+              className="flex w-full items-end space-x-2 max-w-4xl mx-auto"
             >
-              <Input
+              <Textarea
+                ref={inputRef}
                 placeholder="Ask about your collection..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+                    event.preventDefault()
+                    handleSend()
+                  }
+                }}
+                rows={1}
+                maxLength={1000}
                 className={cn(
-                  "flex-1",
-                  (isFullScreen || typeof window !== 'undefined' && window.innerWidth < 640) ? "h-12 text-base" : "h-10 text-sm"
+                  "flex-1 resize-none overflow-y-hidden min-h-10 max-h-40",
+                  (isFullScreen || typeof window !== 'undefined' && window.innerWidth < 640) ? "min-h-12 text-base" : "text-sm"
                 )}
                 disabled={isLoading}
               />
