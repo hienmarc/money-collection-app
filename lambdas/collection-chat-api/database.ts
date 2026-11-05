@@ -1,5 +1,6 @@
 import { GetSecretValueCommand, SecretsManagerClient } from "@aws-sdk/client-secrets-manager"
 import { Client } from "pg"
+import { scopeBanknotesToOwner } from "./sql-validation"
 
 const secrets = new SecretsManagerClient({})
 const dbHost = requiredEnvironment("SUPABASE_DB_HOST")
@@ -98,9 +99,37 @@ export async function runReadOnlyQuery(
   limit = 100,
 ): Promise<BanknoteQueryResult[]> {
   return withAuthenticatedReadOnly(userId, async (client) => {
-    const result = await client.query(
-      `SELECT * FROM (${sql}) AS chatbot_result LIMIT ${limit}`,
+    const scopedRelations = await client.query<{
+      schema_name: string
+      relation_name: string
+      search_path_order: number | null
+    }>(
+      `SELECT c.table_schema AS schema_name,
+              c.table_name AS relation_name,
+              array_position(current_schemas(true), c.table_schema::name) AS search_path_order
+       FROM information_schema.columns AS c
+       JOIN information_schema.tables AS t
+         ON t.table_schema = c.table_schema AND t.table_name = c.table_name
+       WHERE c.column_name = 'ownerid'
+         AND c.table_name = 'banknotes'
+         AND c.table_schema = 'public'
+         AND c.table_schema NOT IN ('pg_catalog', 'information_schema')
+         AND t.table_type IN ('BASE TABLE', 'VIEW', 'FOREIGN')
+       ORDER BY search_path_order NULLS LAST`,
+    )
+    const scopedQuery = scopeBanknotesToOwner(
+      sql,
+      userId,
       parameters,
+      scopedRelations.rows.map(({ schema_name, relation_name, search_path_order }) => ({
+        schema: schema_name,
+        table: relation_name,
+        searchPathOrder: search_path_order,
+      })),
+    )
+    const result = await client.query(
+      `SELECT * FROM (${scopedQuery.sql}) AS chatbot_result LIMIT ${limit}`,
+      scopedQuery.parameters,
     )
     return result.rows as BanknoteQueryResult[]
   })

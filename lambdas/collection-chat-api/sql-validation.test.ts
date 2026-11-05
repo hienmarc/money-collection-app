@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { extractSql, UnsafeQueryError, validateReadOnlyQuery } from "./sql-validation"
+import { extractSql, scopeBanknotesToOwner, UnsafeQueryError, validateReadOnlyQuery } from "./sql-validation"
 
 test("extracts SQL from common Bedrock response wrappers", () => {
   assert.equal(extractSql("```sql\nSELECT COUNT(*) FROM chatbot_my_banknotes;\n```"), "SELECT COUNT(*) FROM chatbot_my_banknotes;")
@@ -59,6 +59,58 @@ test("allows common PostgreSQL functions, window expressions, and casts", () => 
 test("allows PostgreSQL JSON and regex operators", () => {
   const query = "SELECT metadata #>> '{country,name}' FROM public.banknotes WHERE code ~* '^A'"
   assert.equal(validateReadOnlyQuery(query), query)
+})
+
+test("scopes banknotes in joins to the current user and leaves other relations untouched", () => {
+  const result = scopeBanknotesToOwner(
+    "SELECT b.banknoteid FROM public.banknotes b LEFT JOIN public.user_notes n ON n.banknoteid = b.banknoteid WHERE b.year > $1 AND b.ownerid = 'another-user'",
+    "current-user",
+    [2000],
+    [{ schema: "public", table: "banknotes" }],
+  )
+
+  assert.match(result.sql, /FROM \(SELECT \*.*public\.banknotes.*AS b.*b \.ownerid = \(\$2\)/)
+  assert.match(result.sql, /LEFT JOIN public\.user_notes\s+AS n/)
+  assert.doesNotMatch(result.sql, /n \.ownerid|n \.userid/)
+  assert.doesNotThrow(() => validateReadOnlyQuery(result.sql))
+  assert.deepEqual(result.parameters, [2000, "current-user"])
+})
+
+test("scopes banknotes inside CTEs and subqueries without treating CTE names as relations", () => {
+  const result = scopeBanknotesToOwner(
+    "WITH banknotes AS (SELECT * FROM public.user_notes) SELECT * FROM banknotes WHERE EXISTS (SELECT 1 FROM public.banknotes b)",
+    "current-user",
+    [],
+    [{ schema: "public", table: "banknotes" }],
+  )
+
+  assert.equal((result.sql.match(/ownerid\s*=\s*\(\$1\)/g) ?? []).length, 1)
+  assert.match(result.sql, /FROM banknotes/)
+  assert.deepEqual(result.parameters, ["current-user"])
+})
+
+test("does not rewrite SQL when banknotes is not queried", () => {
+  const sql = "SELECT COUNT(*) FROM public.countries"
+  assert.deepEqual(scopeBanknotesToOwner(sql, "current-user", [], [{ schema: "public", table: "banknotes" }]), {
+    sql,
+    parameters: [],
+  })
+})
+
+test("scopes qualified banknotes outside the search path and resolves unqualified banknotes in search-path order", () => {
+  const result = scopeBanknotesToOwner(
+    "SELECT * FROM private.banknotes p JOIN banknotes u ON u.id = p.id",
+    "current-user",
+    [],
+    [
+      { schema: "private", table: "banknotes", searchPathOrder: null },
+      { schema: "public", table: "banknotes", searchPathOrder: 1 },
+    ],
+  )
+
+  assert.equal((result.sql.match(/ownerid\s*=\s*\(\$1\)/g) ?? []).length, 2)
+  assert.match(result.sql, /private\.banknotes/)
+  assert.match(result.sql, /public\.banknotes/)
 })
 
 for (const query of [
