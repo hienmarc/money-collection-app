@@ -30,6 +30,7 @@ All underlying cloud infrastructure, including database provisioning, caching la
 
 - 💵 **Banknote Inventory Management** — Keep track of notes in your collection with detailed information including grade (`G`, `VG`, `F`, `VF`, `XF`, `AU`, `UNC`), denomination, physical dimensions, material, images, and Numista references.
 - 🌐 **Global Catalog & Search** — Search banknotes across currencies and issuing countries using the Numista catalog.
+- 🤖 **AI Collection Assistant** — Ask natural-language questions about your collection and get answers with linked banknote details and images.
 - 📊 **Analytics & Valuation Dashboard** — Interactive charts visualizing collection breakdowns by currency, year of issue, grade distribution, and total collection value.
 - 🔐 **Multi-Tenant Security** — Authentication powered by Supabase Auth with Row Level Security policies scoping records to their respective owners.
 - 👥 **User Roles** — Regular users manage their own banknotes and browse shared catalogs; database-designated admins can maintain the shared country and currency catalogs.
@@ -50,20 +51,34 @@ graph TD
     Client["Next.js Frontend (Vercel)"]
     Supa["Supabase (PostgreSQL + Auth)"]
     Redis["Upstash Redis (Cache)"]
-    AWS["AWS S3 (DB Backups)"]
-    APIs["External APIs (Numista, ExchangeRates, RestCountries)"]
-    GHA["GitHub Actions (CI/CD Workflows)"]
-    TF["Terraform Cloud (IaC)"]
+    API["AWS HTTP API"]
+    Chat["Collection Chat Lambda"]
+    ImageAPI["Image Search API Lambda"]
+    Processor["Image Search Processor"]
+    Bedrock["Amazon Bedrock"]
+    Storage["AWS S3 + DynamoDB"]
+    APIs["External APIs (Numista, Exchange Rates, REST Countries)"]
+    GHA["GitHub Actions"]
+    TF["Terraform Cloud"]
 
-    Client -->|Auth & Data queries| Supa
-    Client -->|Cached Data| Redis
-    Client -->|Catalog Sync| APIs
+    Client -->|Auth & user data| Supa
+    Client -->|Chat & image search| API
+    Client -->|Cached catalog data| Redis
+    API --> Chat
+    API --> ImageAPI
+    Chat -->|Read-only, user-scoped queries| Supa
+    Chat --> Bedrock
+    ImageAPI --> Storage
+    Storage -->|Uploaded images| Processor
+    Processor --> Bedrock
+    Processor --> APIs
     TF -->|Provisions| Supa
     TF -->|Provisions| Redis
     TF -->|Provisions| Client
-    TF -->|Provisions| AWS
-    GHA -->|Push Migrations| Supa
-    GHA -->|Automated Backup| AWS
+    TF -->|Provisions| API
+    TF -->|Provisions| Storage
+    GHA -->|Deploys & migrates| Supa
+    GHA -->|Automated backups| Storage
 ```
 
 ## Project Structure
@@ -72,8 +87,14 @@ graph TD
 money-collection-app/
 ├── frontend/           # Next.js 14+ web app (App Router, Tailwind CSS, TypeScript, shadcn/ui)
 ├── supabase/           # PostgreSQL migrations, schema, and Supabase config
-├── terraform/          # Infrastructure as Code (Supabase, Vercel, Upstash, AWS)
-│   └── bootstrap/      # AWS IAM OIDC bootstrap resources for GitHub Actions
+├── lambdas/
+│   ├── collection-chat-api/     # Bedrock tools and read-only collection queries
+│   ├── image-search-api/        # Authenticated image-search API
+│   └── image-search-processor/  # OCR and banknote catalog processing
+├── terraform/
+│   ├── bootstrap/      # AWS IAM OIDC setup for GitHub Actions
+│   ├── environments/   # Shared, dev, and prod Terraform roots
+│   └── modules/        # Reusable application and cloud resources
 └── .github/
     └── workflows/      # GitHub Actions CI/CD for deployments and DB backups
 ```
@@ -88,6 +109,7 @@ These variables are required by the Next.js frontend application. In production,
 | :--- | :---: | :--- |
 | `NEXT_PUBLIC_SUPABASE_URL` | No | Public Supabase project URL (e.g., `https://<project-id>.supabase.co`) for client-side API requests. |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | No | Public Supabase Anonymous API key for authentication and client-side database queries under Row Level Security. |
+| `NEXT_PUBLIC_IMAGE_SEARCH_API_URL` | No | AWS HTTP API endpoint used by the collection chatbot and image-search feature. |
 | `NUMISTA_API_KEY` | **Yes** | API key for the [Numista API](https://en.numista.com/api/doc/index.php). Used by backend API routes (`/api/numista`) to search and import banknote catalog metadata. |
 | `EXCHANGERATES_API_KEY` | **Yes** | API key for exchange rate data. Used by backend API routes (`/api/exchange-rates`) to calculate live collection value across multiple currencies. |
 | `REST_COUNTRIES_API_KEY` | **Yes** | API key for REST Countries API. Used by backend API routes (`/api/countries`) to retrieve country details and flags. |
