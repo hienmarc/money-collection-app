@@ -116,13 +116,23 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: lambdas/image-search-api/package-lock.json
+          cache-dependency-path: |
+            lambdas/image-search-api/package-lock.json
+            lambdas/collection-chat-api/package-lock.json
 
       - name: Build image-search API Lambda
         working-directory: lambdas/image-search-api
         run: |
           npm ci
           npm run typecheck
+          npm run build
+
+      - name: Build collection-chat API Lambda
+        working-directory: lambdas/collection-chat-api
+        run: |
+          npm ci
+          npm run typecheck
+          npm test
           npm run build
 
       - name: Setup Terraform
@@ -186,7 +196,7 @@ jobs:
         run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
 
       - name: Push database migrations
-        run: supabase db push --remote
+        run: supabase db push --remote --yes
 
       - name: Run seed script (dev only)
         if: github.ref_name != 'main'

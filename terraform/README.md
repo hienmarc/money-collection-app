@@ -8,7 +8,7 @@ The `terraform` directory contains the Terraform configurations for provisioning
   - **Supabase**: Cloud PostgreSQL database project and authentication service.
   - **Upstash**: Global serverless Redis database for fast API caching.
   - **Vercel**: Next.js project creation, environment variable injection, and automated frontend deployment.
-  - **AWS**: Database backup bucket, private image-search uploads on S3, a DynamoDB job store, TypeScript API and Python processing Lambdas, and an extensible API Gateway HTTP API, plus IAM OIDC policies for GitHub Actions deployments.
+  - **AWS**: Database backup bucket, a shared API Gateway HTTP API, private image-search uploads on S3, a DynamoDB job store, TypeScript API and Python processing Lambdas, a read-only collection-chat TypeScript Lambda, and IAM OIDC policies for GitHub Actions deployments.
 - **Environment Management**: `environments/shared`, `environments/dev`, and `environments/prod` are explicit root modules, each pinned to its corresponding Terraform Cloud workspace. Dev and prod consume shared Vercel and Redis outputs through the shared workspace.
 - **Bootstrap Module**: The `terraform/bootstrap/` subfolder establishes the initial AWS OpenID Connect (OIDC) identity provider and GitHub Actions IAM role for passwordless deployment and backup access in the `bootstrap` workspace.
 
@@ -18,6 +18,7 @@ The `terraform` directory contains the Terraform configurations for provisioning
 repository/
 ├── lambdas/
 │   ├── image-search-api/        # TypeScript API Gateway handler
+│   ├── collection-chat-api/     # TypeScript read-only collection chatbot
 │   └── image-search-processor/  # Python S3-triggered processor
 └── terraform/
     ├── environments/
@@ -25,11 +26,14 @@ repository/
     │   ├── dev/       # Dev root module; Terraform Cloud workspace: dev
     │   └── prod/      # Prod root module; Terraform Cloud workspace: prod
     ├── modules/
-    │   ├── application/  # Environment composition module
-    │   ├── database/     # Supabase project and API keys
-    │   ├── backup/       # AWS S3 backup and IAM resources
-    │   ├── image_search/ # Image-search AWS infrastructure
-    │   └── frontend/     # Vercel variables and deployments
+    │   ├── application/     # Environment composition module
+    │   ├── api/                # API Gateway and feature modules
+    │   │   ├── api_gateway/    # Shared HTTP API and stage
+    │   │   ├── image_search/   # Image-search AWS infrastructure
+    │   │   └── collection_chat/ # Collection chatbot AWS infrastructure
+    │   ├── database/        # Supabase project and API keys
+    │   ├── backup/          # AWS S3 backup and IAM resources
+    │   └── frontend/        # Vercel variables and deployments
     └── bootstrap/        # One-time GitHub Actions OIDC setup; workspace: bootstrap
 ```
 
@@ -47,6 +51,14 @@ The current default model is `amazon.nova-lite-v1:0`, a low-cost Bedrock model s
 
 The processor retries failed asynchronous invocations up to two times and records job failures in DynamoDB; details are also available in CloudWatch Logs. API calls and uploads require a deployed AWS environment; local Redis does not emulate this service.
 
-Lambda source is kept outside Terraform in the repository-root `lambdas/` directory. The API Gateway handler is TypeScript/Node.js, bundled with esbuild and the AWS SDK packages into `lambdas/image-search-api/dist/handler.js`; the S3-triggered image processor remains Python. Before running Terraform locally, build the API package from `lambdas/image-search-api` with `npm ci && npm run typecheck && npm run build`. Terraform packages both handlers from `lambdas/`, and the deploy workflow builds the API bundle before Terraform validation and apply.
+Lambda source is kept outside Terraform in the repository-root `lambdas/` directory. The API Gateway handlers are TypeScript/Node.js and bundled with esbuild; the S3-triggered image processor remains Python. Before running Terraform locally, build the API packages from `lambdas/image-search-api` and `lambdas/collection-chat-api` with `npm ci && npm run typecheck && npm run build` (the chat package also has `npm test`). Terraform packages all Lambda handlers from `lambdas/`, and the deploy workflow builds both TypeScript API bundles before Terraform validation and apply.
 
-The GitHub Actions deployment role is provisioned by `terraform/bootstrap` and requires project-scoped permissions for the image-search bucket, DynamoDB table, Lambda functions, and API Gateway. When introducing these resources to an account, apply the updated bootstrap policy first with credentials authorized to update the bootstrap IAM role (`./bootstrap.sh`), then rerun the environment deployment. The environment deployment role cannot grant itself additional AWS permissions.
+The GitHub Actions deployment role is provisioned by `terraform/bootstrap` and requires project-scoped permissions for the image-search bucket, DynamoDB table, Lambda functions, API Gateway, and collection-chat Secrets Manager secret. When introducing these resources to an account, apply the updated bootstrap policy first with credentials authorized to update the bootstrap IAM role (`./bootstrap.sh`), then rerun the environment deployment. The environment deployment role cannot grant itself additional AWS permissions.
+
+## Collection chatbot
+
+The Collection Assistant sends authenticated requests to `POST /v1/chat`. Its TypeScript Lambda uses Bedrock tools and a validated read-only SQL fallback; database access runs as `authenticated`, with banknote queries scoped to the signed-in user's `ownerid`. Queries have a five-second timeout and return at most 100 rows. Answers include Markdown links and only display image URLs returned by the database.
+
+The Lambda reads its database password from AWS Secrets Manager and connects to Supabase's transaction pooler over TLS (`sslmode=require`). Apply the chatbot migrations before enabling traffic. Build and test locally from `lambdas/collection-chat-api` with `npm ci && npm run typecheck && npm test && npm run build`; deployment builds the API Lambdas. The API URL is shared with image search via `NEXT_PUBLIC_IMAGE_SEARCH_API_URL`.
+
+Terraform keeps the API Gateway itself in the shared `api_gateway` module, while `image_search` and `collection_chat` own only their respective integrations, routes, Lambdas, and supporting resources. State move declarations in `application` preserve the existing API Gateway and stage during this module refactor.

@@ -1,0 +1,22 @@
+{
+  "name": "collection-chat-api-lambda",
+  "private": true,
+  "scripts": {
+    "build": "esbuild handler.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/handler.js",
+    "test": "mkdir -p dist && esbuild sql-validation.test.ts chat-answer.test.ts tool-inputs.test.ts --bundle --platform=node --target=node22 --format=cjs --outdir=dist && node --test dist/sql-validation.test.js dist/chat-answer.test.js dist/tool-inputs.test.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.0.0",
+    "@aws-sdk/client-secrets-manager": "^3.0.0",
+    "pg": "^8.16.3",
+    "pgsql-ast-parser": "^12.0.2"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.0",
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.15.5",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.0.0"
+  }
+}

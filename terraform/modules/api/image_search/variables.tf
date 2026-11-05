@@ -1,5 +1,7 @@
 variable "environment" { type = string }
 variable "resource_prefix" { type = string }
+variable "api_id" { type = string }
+variable "api_execution_arn" { type = string }
 variable "supabase_project_id" { type = string }
 variable "supabase_anon_key" {
   type      = string

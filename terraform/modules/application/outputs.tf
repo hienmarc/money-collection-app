@@ -7,5 +7,5 @@ output "db_backup_bucket" {
 }
 
 output "image_search_api_url" {
-  value = module.image_search.api_url
+  value = module.api_gateway.api_url
 }

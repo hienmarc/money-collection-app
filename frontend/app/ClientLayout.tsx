@@ -35,8 +35,7 @@ export default function ClientLayout({
             </main>
           </div>
         </div>
-        {/* TODO: Display chat bot  when backend is ready*/}
-        {/* {!isAuthPage && <ChatBot />} */}  
+        {!isAuthPage && <ChatBot />}
         <Toaster />
       </ThemeProvider>
     </Providers>
