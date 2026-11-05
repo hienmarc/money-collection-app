@@ -1,124 +1,44 @@
 import { parse } from "pgsql-ast-parser"
 
-const safeFunctions = new Set([
-  "abs",
-  "array_agg",
-  "avg",
-  "bool_and",
-  "bool_or",
-  "btrim",
-  "ceil",
-  "ceiling",
-  "coalesce",
-  "concat",
-  "count",
-  "date_part",
-  "date_trunc",
-  "floor",
-  "greatest",
-  "least",
-  "length",
-  "lower",
-  "max",
-  "min",
-  "nullif",
-  "round",
-  "string_agg",
-  "sum",
-  "to_char",
-  "trim",
-  "unnest",
-  "upper",
+const forbiddenStatementTypes = new Set([
+  "alter",
+  "comment",
+  "commit",
+  "copy",
+  "create",
+  "delete",
+  "do",
+  "drop",
+  "execute",
+  "grant",
+  "insert",
+  "prepare",
+  "refresh",
+  "revoke",
+  "rollback",
+  "set",
+  "truncate",
+  "update",
 ])
 
-const safeOperators = new Set([
-  "AND",
-  "OR",
-  "IN",
-  "NOT IN",
-  "LIKE",
-  "NOT LIKE",
-  "ILIKE",
-  "NOT ILIKE",
-  "=",
-  "!=",
-  ">",
-  ">=",
-  "<",
-  "<=",
-  "@>",
-  "<@",
-  "&&",
-  "||",
-  "+",
-  "-",
-  "*",
-  "/",
-  "%",
-  "AT TIME ZONE",
-])
-
-const safeUnaryOperators = new Set([
-  "NOT",
-  "+",
-  "-",
-  "IS NULL",
-  "IS NOT NULL",
-  "IS TRUE",
-  "IS FALSE",
-  "IS NOT TRUE",
-  "IS NOT FALSE",
-])
-
-const safeNodeTypes = new Set([
-  "array",
-  "array_index",
-  "binary",
-  "bool",
-  "call",
-  "case",
-  "cast",
-  "constant",
-  "default",
-  "extract",
-  "integer",
-  "list",
-  "member",
-  "null",
-  "numeric",
-  "overlay",
-  "ref",
-  "select",
-  "statement",
-  "string",
-  "substring",
-  "table",
-  "ternary",
-  "unary",
-  "union",
-  "union all",
-  "value",
-  "with",
-  "INNER JOIN",
-  "LEFT JOIN",
-  "RIGHT JOIN",
-  "FULL JOIN",
-  "CROSS JOIN",
-])
-
-const safeCastTypes = new Set([
-  "bigint",
-  "boolean",
-  "date",
-  "double precision",
-  "integer",
-  "numeric",
-  "real",
-  "text",
-  "timestamp",
-  "timestamp with time zone",
-  "timestamp without time zone",
-  "varchar",
+const forbiddenFunctions = new Set([
+  "dblink",
+  "generate_series",
+  "lo_export",
+  "lo_import",
+  "nextval",
+  "pg_advisory_lock",
+  "pg_advisory_lock_shared",
+  "pg_advisory_xact_lock",
+  "pg_advisory_xact_lock_shared",
+  "pg_notify",
+  "pg_read_binary_file",
+  "pg_read_file",
+  "pg_sleep",
+  "pg_sleep_for",
+  "pg_sleep_until",
+  "set_config",
+  "setval",
 ])
 
 export class UnsafeQueryError extends Error {
@@ -176,8 +96,8 @@ export function validateReadOnlyQuery(sql: string): string {
 
     const record = node as Record<string, unknown>
     const type = record.type
-    if (typeof type === "string" && !safeNodeTypes.has(type)) {
-      throw new UnsafeQueryError("The generated search contains an unsupported SQL operation.")
+    if (typeof type === "string" && forbiddenStatementTypes.has(type.toLowerCase())) {
+      throw new UnsafeQueryError("Only read-only SELECT queries are allowed.")
     }
 
     if (type === "call") {
@@ -185,39 +105,10 @@ export function validateReadOnlyQuery(sql: string): string {
       if (
         !fn ||
         typeof fn.name !== "string" ||
-        !safeFunctions.has(fn.name.toLowerCase()) ||
-        (fn.schema !== undefined && fn.schema !== "pg_catalog")
+        forbiddenFunctions.has(fn.name.toLowerCase()) ||
+        fn.name.toLowerCase().startsWith("pg_advisory_")
       ) {
-        throw new UnsafeQueryError("The generated search contains an unsupported SQL function.")
-      }
-    }
-
-    if (type === "binary") {
-      if (
-        typeof record.op !== "string" ||
-        !safeOperators.has(record.op) ||
-        (record.opSchema !== undefined && record.opSchema !== "pg_catalog")
-      ) {
-        throw new UnsafeQueryError("The generated search contains an unsupported SQL operator.")
-      }
-    }
-
-    if (type === "unary" && (typeof record.op !== "string" || !safeUnaryOperators.has(record.op))) {
-      throw new UnsafeQueryError("The generated search contains an unsupported SQL operator.")
-    }
-
-    if (
-      type === "ternary" &&
-      record.op !== "BETWEEN" &&
-      record.op !== "NOT BETWEEN"
-    ) {
-      throw new UnsafeQueryError("The generated search contains an unsupported SQL operator.")
-    }
-
-    if (type === "cast") {
-      const target = record.to as { name?: unknown } | undefined
-      if (!target || typeof target.name !== "string" || !safeCastTypes.has(target.name.toLowerCase())) {
-        throw new UnsafeQueryError("The generated search contains an unsupported SQL cast.")
+        throw new UnsafeQueryError("The generated search contains a disallowed function.")
       }
     }
 
@@ -228,7 +119,16 @@ export function validateReadOnlyQuery(sql: string): string {
     for (const value of Object.values(record)) visit(value)
   }
 
-  visit(statements[0])
+  const firstStatement = statements[0] as unknown
+  if (
+    !firstStatement ||
+    typeof firstStatement !== "object" ||
+    !("type" in firstStatement) ||
+    !["select", "with", "union", "union all"].includes(String(firstStatement.type).toLowerCase())
+  ) {
+    throw new UnsafeQueryError("Only a read-only SELECT query is allowed.")
+  }
+  visit(firstStatement)
 
   const normalized = sql.trim().replace(/;+$/, "").trim()
   if (!normalized) throw new UnsafeQueryError("The generated search is empty.")
