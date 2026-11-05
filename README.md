@@ -47,38 +47,80 @@ All underlying cloud infrastructure, including database provisioning, caching la
 ## Architecture
 
 ```mermaid
-graph TD
-    Client["Next.js Frontend (Vercel)"]
-    Supa["Supabase (PostgreSQL + Auth)"]
-    Redis["Upstash Redis (Cache)"]
-    API["AWS HTTP API"]
-    Chat["Collection Chat Lambda"]
-    ImageAPI["Image Search API Lambda"]
-    Processor["Image Search Processor"]
-    Bedrock["Amazon Bedrock"]
-    Storage["AWS S3 + DynamoDB"]
-    APIs["External APIs (Numista, Exchange Rates, REST Countries)"]
-    GHA["GitHub Actions"]
-    TF["Terraform Cloud"]
+flowchart LR
+    Collector["Collector"]
 
-    Client -->|Auth & user data| Supa
-    Client -->|Chat & image search| API
-    Client -->|Cached catalog data| Redis
-    API --> Chat
-    API --> ImageAPI
-    Chat -->|Read-only, user-scoped queries| Supa
+    subgraph Vercel["Vercel"]
+        App["Next.js app"]
+    end
+
+    subgraph AWS["AWS Cloud"]
+        direction LR
+        Gateway["☁️ HTTP API Gateway"]
+
+        subgraph Functions["API & processing Lambdas"]
+            direction TB
+            Chat["λ Collection Chat"]
+            ImageAPI["λ Image Search API"]
+            Processor["λ Image Search Processor"]
+        end
+
+        subgraph ImageData["Image search storage"]
+            direction TB
+            Uploads[("🪣 S3 uploads")]
+            Jobs[("▤ DynamoDB jobs")]
+        end
+
+        Textract["Amazon Textract"]
+        Bedrock["Amazon Bedrock"]
+        Backups[("🪣 S3 database backups")]
+    end
+
+    subgraph Data["Application data services"]
+        direction TB
+        Supa[("Supabase<br/>PostgreSQL + Auth")]
+        Redis[("Upstash Redis cache")]
+    end
+
+    subgraph External["External services"]
+        direction TB
+        Numista["Numista"]
+        Rates["Exchange Rates"]
+        Countries["REST Countries"]
+    end
+
+    subgraph Delivery["Deployment"]
+        direction TB
+        GHA["GitHub Actions"]
+        TF["Terraform Cloud"]
+    end
+
+    Collector --> App
+    App -->|Sign-in & collection| Supa
+    App -->|Chat & image search| Gateway
+    App -->|Catalog API requests| Redis
+    Gateway --> Chat
+    Gateway --> ImageAPI
+    Chat -->|Read-only, owner-scoped| Supa
     Chat --> Bedrock
-    ImageAPI --> Storage
-    Storage -->|Uploaded images| Processor
+    ImageAPI -->|Create jobs & upload URLs| Jobs
+    ImageAPI --> Uploads
+    App -->|Upload image| Uploads
+    Uploads -->|Object-created event| Processor
+    Processor --> Jobs
+    Processor --> Textract
+    Textract -->|OCR text| Processor
     Processor --> Bedrock
-    Processor --> APIs
-    TF -->|Provisions| Supa
-    TF -->|Provisions| Redis
-    TF -->|Provisions| Client
-    TF -->|Provisions| API
-    TF -->|Provisions| Storage
-    GHA -->|Deploys & migrates| Supa
-    GHA -->|Automated backups| Storage
+    Processor --> Numista
+    App -->|Catalog lookup| Numista
+    App --> Rates
+    App --> Countries
+    GHA -->|Deploy & migrate| AWS
+    GHA -->|Database dumps| Backups
+    TF -->|Provision| AWS
+    TF -->|Provision| Supa
+    TF -->|Provision| Redis
+    TF -->|Provision| Vercel
 ```
 
 ## Project Structure
