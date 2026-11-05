@@ -15,7 +15,12 @@ export function filterUnknownBanknoteImages(
     ),
   )
 
-  return answer.replace(
+  const markdownWithImages = answer.replace(
+    /(?<!!)\[([^\]]*)\]\(((?:[^()\s]|\([^()\s]*\))*)\)/g,
+    (markdown, alt: string, url: string) => imageUrls.has(url) ? `![${alt}](${url})` : markdown,
+  )
+
+  return markdownWithImages.replace(
     /!\[([^\]]*)\]\(((?:[^()\s]|\([^()\s]*\))*)\)/g,
     (markdown, _alt: string, url: string) => {
       try {

@@ -79,3 +79,22 @@ test("keeps only Markdown images whose URLs belong to returned banknotes", () =>
     ].join("\n"),
   )
 })
+
+test("renders validated banknote image links inline as Markdown images", () => {
+  const frontImage = "https://images.example.com/front.jpg"
+  const backImage = "https://images.example.com/back.jpg"
+  const answer = [
+    `[Front Image](${frontImage})`,
+    `[Back Image](${backImage})`,
+    "[Unrelated link](https://images.example.com/other.jpg)",
+  ].join("\n")
+
+  assert.equal(
+    filterUnknownBanknoteImages(answer, [{ front_image: frontImage, back_image: backImage }]),
+    [
+      `![Front Image](${frontImage})`,
+      `![Back Image](${backImage})`,
+      "[Unrelated link](https://images.example.com/other.jpg)",
+    ].join("\n"),
+  )
+})

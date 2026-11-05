@@ -19,6 +19,7 @@ import {
   Check
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import Link from "next/link"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import {
@@ -42,7 +43,7 @@ const welcomeMessage: Message = {
   content: "Hello! I'm your collection assistant. How can I help you today?",
 }
 
-const MarkdownContent = ({ content, isFullScreen }: { content: string; isFullScreen: boolean }) => {
+const MarkdownContent = ({ content }: { content: string }) => {
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
@@ -50,16 +51,27 @@ const MarkdownContent = ({ content, isFullScreen }: { content: string; isFullScr
         img: ({ node, ...props }) => (
           <img
             {...props}
-            className={cn(
-              "rounded-md border border-border shadow-sm h-auto my-2",
-              isFullScreen ? "max-w-2xl" : "max-w-full"
-            )}
+            className="max-w-full rounded-md border border-border shadow-sm h-auto my-2"
             loading="lazy"
           />
         ),
-        a: ({ node, ...props }) => (
-          <a {...props} className="text-blue-800 hover:underline dark:text-blue-300" target="_blank" rel="noopener noreferrer" />
-        ),
+        a: ({ node, href, children, ...props }) => {
+          const className = "text-blue-800 hover:underline dark:text-blue-300"
+          if (href?.startsWith("/banknotes/")) {
+            return <Link href={href} className={className}>{children}</Link>
+          }
+          return (
+            <a
+              {...props}
+              href={href}
+              className={className}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {children}
+            </a>
+          )
+        },
         p: ({ node, ...props }) => (
           <p {...props} className="mb-2 last:mb-0 leading-relaxed text-slate-900 dark:text-slate-100" />
         ),
@@ -312,11 +324,11 @@ export function ChatBot() {
                     className={cn(
                       "group flex flex-col rounded-lg p-4 text-sm shadow-sm transition-all relative",
                       m.role === "user"
-                        ? "ml-auto bg-primary text-primary-foreground max-w-[85%] sm:max-w-[80%]"
-                        : "bg-slate-100 text-slate-950 border border-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 max-w-[95%] sm:max-w-[90%]"
+                        ? "ml-auto bg-primary text-primary-foreground max-w-[350px]"
+                        : "bg-slate-100 text-slate-950 border border-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 max-w-[350px]"
                     )}
                     style={{
-                      maxWidth: m.role === "user" ? "min(80%, 42rem)" : "min(90%, 48rem)",
+                      maxWidth: "min(90%, 350px)",
                     }}
                   >
                     <div className="flex items-center justify-between mb-2">
@@ -342,7 +354,7 @@ export function ChatBot() {
                         ? "prose-invert"
                         : "prose-slate prose-headings:text-slate-950 prose-p:text-slate-900 prose-li:text-slate-900 prose-strong:text-slate-950 prose-th:text-slate-900 prose-td:text-slate-900 dark:prose-invert dark:prose-headings:text-white dark:prose-p:text-slate-100 dark:prose-li:text-slate-100 dark:prose-strong:text-white dark:prose-th:text-slate-100 dark:prose-td:text-slate-100"
                     )}>
-                      <MarkdownContent content={m.content} isFullScreen={isFullScreen} />
+                      <MarkdownContent content={m.content} />
                     </div>
                     {m.role === "assistant" && i === latestAssistantMessageIndex && !!m.followUpQuestions?.length && (
                       <div className="mt-3 space-y-2 border-t border-slate-300 pt-3 dark:border-slate-600">
@@ -368,8 +380,8 @@ export function ChatBot() {
                 ))}
                 {isLoading && (
                   <div
-                    className="bg-muted text-muted-foreground max-w-[85%] rounded-lg p-3 text-sm animate-pulse flex items-center gap-2 border border-border shadow-sm"
-                    style={{ maxWidth: "min(90%, 48rem)" }}
+                    className="bg-muted text-muted-foreground max-w-[350px] rounded-lg p-3 text-sm animate-pulse flex items-center gap-2 border border-border shadow-sm"
+                    style={{ maxWidth: "min(90%, 350px)" }}
                   >
                     <Loader2 className="h-3 w-3 animate-spin text-primary" />
                     Assistant is thinking...
