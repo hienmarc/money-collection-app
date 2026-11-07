@@ -306,7 +306,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
           </div>
         </div>
 
-        {!isOwnProfile && banknotes.length > 0 && (
+        {banknotes.length > 0 && (
           <div className="space-y-3 rounded-lg border bg-card p-4">
             <div className="relative">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
