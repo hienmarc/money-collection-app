@@ -13,7 +13,11 @@ export interface NumistaBanknote {
   issuer?: { name?: string }
   min_year?: number
   max_year?: number
-  value?: { text?: string }
+  value?: {
+    text?: string
+    numeric_value?: number
+    currency?: { id?: number | string; code?: string }
+  }
 }
 
 export function NumistaBanknoteCard({
