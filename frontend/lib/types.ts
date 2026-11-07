@@ -80,3 +80,16 @@ export interface UserProfile {
   banknotesCount?: number
   countriesCount?: number
 }
+
+export interface WishlistItem {
+  wishlistid: number
+  ownerid: string
+  numistaid: number
+  min_year: number | null
+  max_year: number | null
+  title: string
+  country: string
+  obverse_thumbnail: string | null
+  level: number
+  created_at: string
+}

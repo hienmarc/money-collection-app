@@ -13,6 +13,7 @@ import {
   Search,
   Image as ImageIcon,
   DollarSign,
+  Heart,
   Users,
 } from "lucide-react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
@@ -32,6 +33,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
     { name: "Catalog", href: "/catalog", icon: Search },
     { name: "Image Search", href: "/image-search", icon: ImageIcon },
     { name: "Banknotes", href: "/banknotes", icon: BanknoteIcon },
+    { name: "Wishlist", href: "/wishlist", icon: Heart },
     { name: "Collection Value", href: "/collection-value", icon: DollarSign },
     { name: "Currencies", href: "/currencies", icon: Coins },
     { name: "Countries", href: "/countries", icon: Globe },

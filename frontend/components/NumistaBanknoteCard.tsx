@@ -1,8 +1,10 @@
 "use client"
 
-import { Calendar, DollarSign, Globe, Info, Plus } from "lucide-react"
+import { useState } from "react"
+import { Calendar, DollarSign, Globe, Heart, Info, Plus, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 export interface NumistaBanknote {
   id?: number | string
@@ -17,10 +19,19 @@ export interface NumistaBanknote {
 export function NumistaBanknoteCard({
   banknote,
   onAddToCollection,
+  onAddToWishlist,
+  wishlistLevel,
+  isAddingToWishlist,
 }: {
   banknote: NumistaBanknote
   onAddToCollection: () => void
+  onAddToWishlist?: (level: number) => void
+  wishlistLevel?: number
+  isAddingToWishlist?: boolean
 }) {
+  const [isWishlistPickerOpen, setIsWishlistPickerOpen] = useState(false)
+  const [selectedLevel, setSelectedLevel] = useState(wishlistLevel ?? 3)
+
   return (
     <Card className="overflow-hidden transition-shadow hover:shadow-md">
       <CardContent className="p-0">
@@ -62,14 +73,74 @@ export function NumistaBanknoteCard({
                 </div>
               )}
             </div>
-            <Button
-              onClick={onAddToCollection}
-              size="icon"
-              className="absolute bottom-2 right-2 h-6 w-6 rounded-full"
-              title="Add to Collection"
-            >
-              <Plus className="h-3 w-3" />
-            </Button>
+            <div className="absolute bottom-2 right-2 flex gap-1">
+              {onAddToWishlist && (
+                <Popover
+                  open={isWishlistPickerOpen}
+                  onOpenChange={(open) => {
+                    if (open) setSelectedLevel(wishlistLevel ?? 3)
+                    setIsWishlistPickerOpen(open)
+                  }}
+                >
+                  <PopoverTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="h-6 w-6 rounded-full"
+                      title={wishlistLevel ? "Update wishlist priority" : "Add to wishlist"}
+                      aria-label={wishlistLevel ? "Update wishlist priority" : "Add to wishlist"}
+                    >
+                      <Heart className={`h-3 w-3 ${wishlistLevel ? "fill-current text-rose-500" : ""}`} />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent side="top" className="w-56 space-y-3">
+                    <p className="text-sm font-medium">How much do you want this banknote?</p>
+                    <div className="flex items-center justify-center">
+                      {[1, 2, 3, 4, 5].map((level) => (
+                        <Button
+                          key={level}
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          title={`${level} ${level === 1 ? "star" : "stars"}`}
+                          aria-label={`Set wishlist level to ${level} ${level === 1 ? "star" : "stars"}`}
+                          aria-pressed={selectedLevel === level}
+                          onClick={() => setSelectedLevel(level)}
+                        >
+                          <Star
+                            className={`h-4 w-4 ${
+                              level <= selectedLevel ? "fill-amber-400 text-amber-400" : "text-muted-foreground"
+                            }`}
+                          />
+                        </Button>
+                      ))}
+                    </div>
+                    <Button
+                      type="button"
+                      className="w-full"
+                      size="sm"
+                      disabled={isAddingToWishlist}
+                      onClick={() => {
+                        onAddToWishlist(selectedLevel)
+                        setIsWishlistPickerOpen(false)
+                      }}
+                    >
+                      {isAddingToWishlist ? "Saving..." : wishlistLevel ? "Update Wishlist" : "Add to Wishlist"}
+                    </Button>
+                  </PopoverContent>
+                </Popover>
+              )}
+              <Button
+                onClick={onAddToCollection}
+                size="icon"
+                className="h-6 w-6 rounded-full"
+                title="Add to Collection"
+                aria-label="Add to collection"
+              >
+                <Plus className="h-3 w-3" />
+              </Button>
+            </div>
           </div>
         </div>
       </CardContent>
