@@ -90,9 +90,6 @@ export interface WishlistItem {
   title: string
   country: string
   obverse_thumbnail: string | null
-  value_amount: number | string | null
-  value_currency: string | null
-  value_text: string | null
   level: number
   created_at: string
 }

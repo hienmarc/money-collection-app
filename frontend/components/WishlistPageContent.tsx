@@ -6,7 +6,6 @@ import { useQuery } from "@tanstack/react-query"
 import { ArrowLeft, Heart, Loader2, Lock, Plus, Star, Trash2 } from "lucide-react"
 import { createClient } from "@/utils/supabase/client"
 import { useWishlist } from "@/hooks/use-wishlist"
-import { useExchangeRates } from "@/hooks/use-currencies"
 import type { WishlistItem, UserProfile } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card"
@@ -20,8 +19,6 @@ function WishlistItemCard({
   onRemove,
   isUpdating,
   isRemoving,
-  referenceCurrency,
-  exchangeRates,
 }: {
   item: WishlistItem
   canManage: boolean
@@ -29,20 +26,11 @@ function WishlistItemCard({
   onRemove: () => void
   isUpdating: boolean
   isRemoving: boolean
-  referenceCurrency: string
-  exchangeRates: Record<string, number>
 }) {
   const [hoveredLevel, setHoveredLevel] = useState<number | null>(null)
   const years = item.min_year === item.max_year
     ? item.min_year
     : [item.min_year, item.max_year].filter((year) => year !== null).join("-")
-  const amount = item.value_amount === null ? null : Number(item.value_amount)
-  const sourceRate = item.value_currency === "EUR" ? 1 : exchangeRates[item.value_currency || ""]
-  const targetRate = referenceCurrency === "EUR" ? 1 : exchangeRates[referenceCurrency]
-  const estimatedValue =
-    amount !== null && Number.isFinite(amount) && sourceRate && targetRate
-      ? (amount / sourceRate) * targetRate
-      : null
   const levelPreview = hoveredLevel ?? item.level
 
   return (
@@ -85,18 +73,6 @@ function WishlistItemCard({
               <CardTitle className="line-clamp-2 text-sm">{item.title}</CardTitle>
               <p className="mt-1 truncate text-xs text-muted-foreground">{item.country}</p>
               {years && <p className="mt-1 text-xs text-muted-foreground">{years}</p>}
-              <p className="mt-1 text-xs font-medium text-muted-foreground">
-                Estimated value:{" "}
-                {estimatedValue === null
-                  ? item.value_text
-                    ? `${item.value_text} (conversion unavailable)`
-                    : "Unavailable"
-                  : new Intl.NumberFormat(undefined, {
-                      style: "currency",
-                      currency: referenceCurrency,
-                      maximumFractionDigits: 2,
-                    }).format(estimatedValue)}
-              </p>
             </div>
             <div className="mt-2 flex items-center justify-between gap-2">
               <div
@@ -150,13 +126,18 @@ function WishlistItemCard({
                   </Button>
                 </div>
               )}
-              <Button asChild size="sm" variant="outline" className="h-7 px-2 text-xs">
+              <Button
+                asChild
+                size="icon"
+                variant="outline"
+                className="h-7 w-7"
+                title="Add to collection"
+              >
                 <Link
                   href={`/banknotes/new?numista_id=${item.numistaid}`}
                   aria-label={`Add ${item.title} to collection`}
                 >
-                  <Plus className="mr-1 h-3.5 w-3.5" />
-                  Add to collection
+                  <Plus className="h-4 w-4" />
                 </Link>
               </Button>
             </div>
@@ -170,10 +151,8 @@ function WishlistItemCard({
 export default function WishlistPageContent({ userId }: { userId?: string }) {
   const supabase = createClient()
   const wishlist = useWishlist(userId)
-  const { data: exchangeRates = {}, isLoading: isLoadingRates } = useExchangeRates()
   const targetUserId = userId ?? wishlist.currentUser?.id
   const [groupBy, setGroupBy] = useState<"level" | "country" | "none">("level")
-  const [referenceCurrency, setReferenceCurrency] = useState("CAD")
 
   const groupedItems = useMemo(() => {
     if (groupBy === "none") return [{ key: "all", label: "", items: wishlist.items }]
@@ -307,29 +286,6 @@ export default function WishlistPageContent({ userId }: { userId?: string }) {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1">
-            <label htmlFor="wishlist-currency" className="text-sm font-medium">Reference currency</label>
-            <Select value={referenceCurrency} onValueChange={setReferenceCurrency}>
-              <SelectTrigger id="wishlist-currency" className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {[...new Set(["CAD", "USD", "EUR", ...Object.keys(exchangeRates)])]
-                  .sort((a, b) => {
-                    const common = ["CAD", "USD", "EUR"]
-                    const firstIndex = common.indexOf(a)
-                    const secondIndex = common.indexOf(b)
-                    if (firstIndex !== -1 || secondIndex !== -1) {
-                      return (firstIndex === -1 ? common.length : firstIndex) -
-                        (secondIndex === -1 ? common.length : secondIndex)
-                    }
-                    return a.localeCompare(b)
-                  })
-                  .map((code) => <SelectItem key={code} value={code}>{code}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            {isLoadingRates && <p className="text-xs text-muted-foreground">Loading exchange rates...</p>}
-          </div>
         </div>
       )}
 
@@ -361,8 +317,6 @@ export default function WishlistPageContent({ userId }: { userId?: string }) {
                     onRemove={() => wishlist.remove.mutate(item.wishlistid)}
                     isUpdating={wishlist.updateLevel.isPending}
                     isRemoving={wishlist.remove.isPending}
-                    referenceCurrency={referenceCurrency}
-                    exchangeRates={exchangeRates}
                   />
                 ))}
               </div>

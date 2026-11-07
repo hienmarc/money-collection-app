@@ -56,19 +56,6 @@ export function useWishlist(userId?: string, canView = true) {
         throw new Error("This banknote does not have a valid Numista ID.")
       }
 
-      let valueCurrency = banknote.value?.currency?.code
-      const numistaCurrencyId = Number(banknote.value?.currency?.id)
-      if (!valueCurrency && Number.isSafeInteger(numistaCurrencyId) && numistaCurrencyId > 0) {
-        const { data: currency, error: currencyError } = await supabase
-          .from("currencies")
-          .select("code")
-          .eq("numistaid", numistaCurrencyId)
-          .maybeSingle()
-
-        if (currencyError) throw currencyError
-        valueCurrency = currency?.code
-      }
-
       const { error } = await supabase.from("wishlist").upsert(
         {
           ownerid: data.user.id,
@@ -78,9 +65,6 @@ export function useWishlist(userId?: string, canView = true) {
           title: banknote.title || "Untitled banknote",
           country: banknote.issuer?.name || "Unknown",
           obverse_thumbnail: banknote.obverse_thumbnail ?? null,
-          value_amount: banknote.value?.numeric_value ?? null,
-          value_currency: valueCurrency ?? null,
-          value_text: banknote.value?.text ?? null,
           level,
         },
         { onConflict: "ownerid,numistaid" },
