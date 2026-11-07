@@ -11,11 +11,14 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Loader2, Search } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { NumistaBanknoteCard } from "@/components/NumistaBanknoteCard"
+import type { NumistaBanknote } from "@/components/NumistaBanknoteCard"
+import { useWishlist } from "@/hooks/use-wishlist"
 
 export default function CatalogPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [activeQuery, setActiveQuery] = useState("")
   const router = useRouter()
+  const wishlist = useWishlist()
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["catalog", activeQuery],
@@ -29,13 +32,14 @@ export default function CatalogPage() {
   })
 
   const searchResults = data?.types || []
+  const wishlistLevels = new Map(wishlist.items.map((item) => [item.numistaid, item.level]))
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     setActiveQuery(searchQuery)
   }
 
-  const handleAddToCollection = (banknote: any) => {
+  const handleAddToCollection = (banknote: NumistaBanknote) => {
     router.push(`/banknotes/new?numista_id=${banknote.id}`)
   }
 
@@ -92,11 +96,14 @@ export default function CatalogPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {searchResults.map((banknote: any) => (
+          {searchResults.map((banknote: NumistaBanknote) => (
             <NumistaBanknoteCard
               key={banknote.id}
               banknote={banknote}
               onAddToCollection={() => handleAddToCollection(banknote)}
+              onAddToWishlist={(level) => wishlist.addOrUpdate.mutate({ banknote, level })}
+              wishlistLevel={wishlistLevels.get(Number(banknote.id))}
+              isAddingToWishlist={wishlist.addOrUpdate.isPending}
             />
           ))}
         </div>

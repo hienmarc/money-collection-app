@@ -13,6 +13,7 @@ import {
   Loader2,
   Shield,
   CreditCard,
+  Heart,
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -196,6 +197,15 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
             <p className="text-xs text-muted-foreground mt-1">Distinct issuing countries</p>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="flex justify-end">
+        <Button asChild variant="outline" className="gap-2">
+          <Link href={isOwnProfile ? "/wishlist" : `/users/${userId}/wishlist`}>
+            <Heart className="h-4 w-4" />
+            {isOwnProfile ? "View My Wishlist" : `View ${displayName}'s Wishlist`}
+          </Link>
+        </Button>
       </div>
 
       {/* Banknote Collection Showcase */}
