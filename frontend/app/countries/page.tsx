@@ -64,7 +64,14 @@ interface SortConfig {
 
 export default function CountriesPage() {
   const { countries = [], isLoading, refreshCountries, deleteCountry, isRefetching } = useCountries()
-  const { banknoteCounts, isLoading: isLoadingCounts, error: banknoteCountsError } = useCountryBanknoteCounts()
+  const {
+    banknoteCounts,
+    countryCurrencies,
+    banknoteImagesByCurrency,
+    collectionCurrencies,
+    isLoading: isLoadingCounts,
+    error: banknoteCountsError,
+  } = useCountryBanknoteCounts()
   const { error: adminError } = useIsAdmin()
 
   // State
@@ -629,6 +636,9 @@ export default function CountriesPage() {
             <CountriesMapView
               countries={filteredCountries}
               banknoteCounts={banknoteCounts}
+              countryCurrencies={countryCurrencies}
+              banknoteImagesByCurrency={banknoteImagesByCurrency}
+              collectionCurrencies={collectionCurrencies}
               isLoading={isLoadingCounts}
               error={banknoteCountsError}
             />
