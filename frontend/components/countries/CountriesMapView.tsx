@@ -1,12 +1,12 @@
 "use client"
 
-import { useMemo, useRef, useState, type MouseEvent } from "react"
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react"
 import { useRouter } from "next/navigation"
 import { alpha2ToAlpha3, numericToAlpha3 } from "i18n-iso-countries"
 import { ComposableMap, Geographies, Geography } from "react-simple-maps"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2 } from "lucide-react"
+import { Loader2, Maximize2, Minimize2 } from "lucide-react"
 import type { Country } from "@/hooks/use-countries"
 import type { CountryMapCurrency } from "@/hooks/use-country-banknote-counts"
 
@@ -74,14 +74,44 @@ export function CountriesMapView({
   error,
 }: CountriesMapViewProps) {
   const router = useRouter()
+  const mapCardRef = useRef<HTMLDivElement>(null)
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const [displayMode, setDisplayMode] = useState<MapDisplayMode>("banknotes")
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const [fullscreenError, setFullscreenError] = useState<string | null>(null)
   const [activeCountry, setActiveCountry] = useState<{
     country: Country
     count: number
     x: number
     y: number
   } | null>(null)
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const active = document.fullscreenElement === mapCardRef.current
+      setIsFullscreen(active)
+      if (active) setFullscreenError(null)
+    }
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange)
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange)
+  }, [])
+
+  const toggleFullscreen = async () => {
+    const mapCard = mapCardRef.current
+    if (!mapCard) return
+
+    try {
+      if (document.fullscreenElement === mapCard) {
+        await document.exitFullscreen()
+      } else {
+        await mapCard.requestFullscreen()
+      }
+      setFullscreenError(null)
+    } catch (error) {
+      setFullscreenError(error instanceof Error ? error.message : "Could not change the map's full-screen state.")
+    }
+  }
 
   const countriesByAlpha3 = useMemo(() => {
     const result = new Map<string, Country>()
@@ -151,7 +181,10 @@ export function CountriesMapView({
   }
 
   return (
-    <Card>
+    <Card
+      ref={mapCardRef}
+      className={isFullscreen ? "fixed inset-0 z-[100] h-screen w-screen overflow-auto rounded-none" : undefined}
+    >
       <CardHeader className="flex flex-col gap-3 space-y-0 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <CardTitle>{displayMode === "banknotes" ? "Banknotes by country" : "Currencies by country"}</CardTitle>
@@ -182,10 +215,25 @@ export function CountriesMapView({
               Currencies
             </Button>
           </div>
+          <Button
+            type="button"
+            size="icon"
+            variant="outline"
+            aria-label={isFullscreen ? "Exit full screen map" : "View map full screen"}
+            title={isFullscreen ? "Exit full screen" : "View full screen"}
+            onClick={() => void toggleFullscreen()}
+          >
+            {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </Button>
           {isLoading && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-label="Loading country map details" />}
         </div>
       </CardHeader>
       <CardContent>
+        {fullscreenError && (
+          <p role="alert" className="mb-3 text-sm text-destructive">
+            Could not change full-screen mode: {fullscreenError}
+          </p>
+        )}
         {error && (
           <p role="alert" className="mb-3 text-sm text-destructive">
             Could not load country map details: {error.message}
