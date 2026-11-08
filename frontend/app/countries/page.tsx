@@ -36,6 +36,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "@/components/ui/use-toast"
+import { CountriesMapView } from "@/components/countries/CountriesMapView"
 import {
   List,
   Grid,
@@ -51,19 +52,10 @@ import {
   RefreshCw,
 } from "lucide-react"
 import { createClient } from "@/utils/supabase/client"
-import { useCountries } from "@/hooks/use-countries"
+import { useCountries, type Country } from "@/hooks/use-countries"
+import { useCountryBanknoteCounts } from "@/hooks/use-country-banknote-counts"
 import { useIsAdmin } from "@/hooks/use-is-admin"
 import { AdminOnly } from "@/components/AdminRouteGuard"
-
-// Types
-interface Country {
-  countryid: number
-  name: string
-  code: string
-  flagUrl?: string
-  continent?: string
-  selected?: boolean
-}
 
 interface SortConfig {
   key: "name" | "code" | "continent"
@@ -72,10 +64,18 @@ interface SortConfig {
 
 export default function CountriesPage() {
   const { countries = [], isLoading, refreshCountries, deleteCountry, isRefetching } = useCountries()
+  const {
+    banknoteCounts,
+    countryCurrencies,
+    banknoteImagesByCurrency,
+    collectionCurrencies,
+    isLoading: isLoadingCounts,
+    error: banknoteCountsError,
+  } = useCountryBanknoteCounts()
   const { error: adminError } = useIsAdmin()
 
   // State
-  const [viewMode, setViewMode] = useState("grid")
+  const [viewMode, setViewMode] = useState<"list" | "grid" | "map">("grid")
   const [searchTerm, setSearchTerm] = useState("")
   const [continentFilter, setContinentFilter] = useState("all")
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "name", direction: "asc" })
@@ -537,17 +537,19 @@ export default function CountriesPage() {
             </SelectContent>
           </Select>
 
-          <Select value={String(itemsPerPage)} onValueChange={(value) => setItemsPerPage(Number(value))}>
-            <SelectTrigger className="w-full sm:w-[110px]">
-              <SelectValue placeholder="Per page" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="12">12 per page</SelectItem>
-              <SelectItem value="24">24 per page</SelectItem>
-              <SelectItem value="48">48 per page</SelectItem>
-              <SelectItem value="96">96 per page</SelectItem>
-            </SelectContent>
-          </Select>
+          {viewMode !== "map" && (
+            <Select value={String(itemsPerPage)} onValueChange={(value) => setItemsPerPage(Number(value))}>
+              <SelectTrigger className="w-full sm:w-[110px]">
+                <SelectValue placeholder="Per page" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="12">12 per page</SelectItem>
+                <SelectItem value="24">24 per page</SelectItem>
+                <SelectItem value="48">48 per page</SelectItem>
+                <SelectItem value="96">96 per page</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         <div className="flex gap-2">
@@ -615,7 +617,7 @@ export default function CountriesPage() {
           "Loading countries..."
         ) : (
           <>
-            Showing {paginatedCountries.length} of {filteredCountries.length} countries
+            Showing {viewMode === "map" ? filteredCountries.length : paginatedCountries.length} of {filteredCountries.length} countries
             {filteredCountries.length !== countries.length && <> (filtered from {countries.length} total)</>}
           </>
         )}
@@ -630,11 +632,22 @@ export default function CountriesPage() {
         <>
           {viewMode === "list" && renderListView()}
           {viewMode === "grid" && renderGridView()}
+          {viewMode === "map" && (
+            <CountriesMapView
+              countries={filteredCountries}
+              banknoteCounts={banknoteCounts}
+              countryCurrencies={countryCurrencies}
+              banknoteImagesByCurrency={banknoteImagesByCurrency}
+              collectionCurrencies={collectionCurrencies}
+              isLoading={isLoadingCounts}
+              error={banknoteCountsError}
+            />
+          )}
         </>
       )}
 
       {/* Pagination */}
-      <div className="flex items-center justify-center mt-4">{renderPagination()}</div>
+      {viewMode !== "map" && <div className="flex items-center justify-center mt-4">{renderPagination()}</div>}
 
       {/* Delete confirmation dialog */}
       <AdminOnly><Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
