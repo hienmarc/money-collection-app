@@ -46,6 +46,10 @@ All underlying cloud infrastructure, including database provisioning, caching la
 
 ## Architecture
 
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design notes and rationale.
+
+At a high level, the app is designed to run at no cost while usage stays within free tiers: Supabase provides free-tier SQL databases for dev and prod, and Vercel and Upstash currently host the frontend and cache at no cost. AWS uses serverless services (Lambda, API Gateway, S3, and DynamoDB) to avoid fixed infrastructure costs.
+
 ```mermaid
 flowchart LR
     Collector["Collector"]
@@ -127,18 +131,21 @@ flowchart LR
 
 ```text
 money-collection-app/
-├── frontend/           # Next.js 14+ web app (App Router, Tailwind CSS, TypeScript, shadcn/ui)
-├── supabase/           # PostgreSQL migrations, schema, and Supabase config
+├── frontend/           # Next.js 16 web app (App Router, Tailwind, TypeScript, shadcn/ui)
+├── supabase/           # PostgreSQL migrations, seed data, and config
 ├── lambdas/
-│   ├── collection-chat-api/     # Bedrock tools and read-only collection queries
+│   ├── collection-chat-api/     # Bedrock-powered collection assistant
 │   ├── image-search-api/        # Authenticated image-search API
-│   └── image-search-processor/  # OCR and banknote catalog processing
+│   └── image-search-processor/  # OCR and catalog matching for uploaded banknote images
 ├── terraform/
 │   ├── bootstrap/      # AWS IAM OIDC setup for GitHub Actions
 │   ├── environments/   # Shared, dev, and prod Terraform roots
-│   └── modules/        # Reusable application and cloud resources
-└── .github/
-    └── workflows/      # GitHub Actions CI/CD for deployments and DB backups
+│   └── modules/        # Reusable app and cloud resources
+├── bootstrap.sh        # Applies terraform/bootstrap and exports the GitHub Actions role ARN
+├── docker-compose.yml  # Local Redis + serverless-redis-http for development
+├── .github/
+│   └── workflows/      # GitHub Actions CI/CD for Terraform deploys and database backups
+└── README.md
 ```
 
 ## Environment Variables & Secrets
@@ -207,32 +214,32 @@ For automated deployments and database backups via GitHub Actions, set the follo
    cd money-collection-app
    ```
 
-2. **Start local Supabase services:**
+2. **Start Supabase locally:**
    ```bash
    cd supabase
    supabase start
    ```
 
-   PostgreSQL will be available at `postgres://postgres:postgres@localhost:54322/postgres` for local development.
+   PostgreSQL will be available at `postgres://postgres:postgres@localhost:54322/postgres`.
 
-3. **Start local Redis:**
-   Still in the `supabase/` directory, run the following command to start the bundled serverless Redis instance:
+3. **Start Redis locally (repo root):**
    ```bash
+   cd ..
    docker compose up -d
    ```
 
-   Redis will be available at `redis://localhost:6379` for local development.
+   Redis is exposed at `redis://localhost:6379`; the HTTP proxy is on `http://localhost:8079`.
 
-4. Setup environment variables for local development. Create a `.env.local` file in the `frontend/` directory with the required variables (see [Environment Variables & Secrets](#environment-variables--secrets) section above).
+4. **Set local environment variables:** create `frontend/.env.local` with the required keys from the [Environment Variables & Secrets](#environment-variables--secrets) section.
 
-5. **Run the frontend app:**
+5. **Run the app:**
    ```bash
-   cd ../frontend
+   cd frontend
    npm install
    npm run dev
    ```
 
-6. Open [http://localhost:3000](http://localhost:3000) in your browser.
+6. Open [http://localhost:3000](http://localhost:3000).
 
 The seed data for the database includes a sample account for testing purposes:
 - Email: `test@example.com`
