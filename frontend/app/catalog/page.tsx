@@ -2,8 +2,8 @@
 
 import type React from "react"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { Suspense, useEffect, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -12,10 +12,18 @@ import { Loader2, Search } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { NumistaBanknoteCard } from "@/components/NumistaBanknoteCard"
 
-export default function CatalogPage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [activeQuery, setActiveQuery] = useState("")
+function CatalogContent() {
+  const searchParams = useSearchParams()
+  const urlSearch = searchParams.get("search") ?? ""
+  const [searchQuery, setSearchQuery] = useState(urlSearch)
+  const [activeQuery, setActiveQuery] = useState(urlSearch)
+  const [showReverseThumbnail, setShowReverseThumbnail] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    setSearchQuery(urlSearch)
+    setActiveQuery(urlSearch)
+  }, [urlSearch])
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["catalog", activeQuery],
@@ -32,7 +40,22 @@ export default function CatalogPage() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    setActiveQuery(searchQuery)
+    const query = searchQuery.trim()
+    setSearchQuery(query)
+    setActiveQuery(query)
+
+    const nextSearchParams = new URLSearchParams(searchParams.toString())
+    if (query) {
+      nextSearchParams.set("search", query)
+    } else {
+      nextSearchParams.delete("search")
+    }
+
+    const currentQueryString = searchParams.toString()
+    const nextQueryString = nextSearchParams.toString()
+    if (nextQueryString !== currentQueryString) {
+      router.push(nextQueryString ? `/catalog?${nextQueryString}` : "/catalog", { scroll: false })
+    }
   }
 
   const handleAddToCollection = (banknote: any) => {
@@ -45,7 +68,7 @@ export default function CatalogPage() {
         <h1 className="text-2xl font-bold">Banknote Catalog</h1>
       </div>
 
-      <form onSubmit={handleSearch} className="flex gap-2">
+      <form onSubmit={handleSearch} className="flex flex-wrap items-center gap-2">
         <div className="relative flex-grow">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -56,6 +79,15 @@ export default function CatalogPage() {
             className="pl-9"
           />
         </div>
+        <label className="flex shrink-0 items-center gap-2 text-sm text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={showReverseThumbnail}
+            onChange={(e) => setShowReverseThumbnail(e.target.checked)}
+            className="h-4 w-4 accent-primary"
+          />
+          Show reverse side
+        </label>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             <>
@@ -96,6 +128,7 @@ export default function CatalogPage() {
             <NumistaBanknoteCard
               key={banknote.id}
               banknote={banknote}
+              showReverseThumbnail={showReverseThumbnail}
               onAddToCollection={() => handleAddToCollection(banknote)}
             />
           ))}
@@ -108,5 +141,13 @@ export default function CatalogPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function CatalogPage() {
+  return (
+    <Suspense fallback={null}>
+      <CatalogContent />
+    </Suspense>
   )
 }
