@@ -12,7 +12,7 @@
   [![Vercel](https://img.shields.io/badge/Vercel-Hosted-000000?style=flat-square&logo=vercel&logoColor=white)](https://vercel.com/)
   [![AWS](https://img.shields.io/badge/AWS-S3_%26_IAM-232F3E?style=flat-square&logo=amazon-webservices&logoColor=white)](https://aws.amazon.com/)
 
-  [Overview](#overview) • [Features](#features) • [Architecture](#architecture) • [Project Structure](#project-structure) • [Environment Variables & Secrets](#environment-variables--secrets) • [Getting Started](#getting-started) • [Deployment](#deployment)
+  [Overview](#overview) • [Live Demo](#live-demo) • [Screenshots](#screenshots) • [Features](#features) • [Architecture](#architecture) • [Project Structure](#project-structure) • [Environment Variables & Secrets](#environment-variables--secrets) • [Getting Started](#getting-started) • [Deployment](#deployment)
 
 </div>
 
@@ -25,6 +25,26 @@
 The application pairs a modern Next.js frontend with Supabase PostgreSQL for database storage and user authentication, Upstash Redis for API caching, and Numista API integrations for global currency cataloging.
 
 All underlying cloud infrastructure, including database provisioning, caching layers, Vercel deployments, and AWS S3 database backups, is managed declaratively with Terraform and automated through GitHub Actions CI/CD workflows.
+
+## Live Demo
+
+Try the production app at [money-collection-app-nine.vercel.app](https://money-collection-app-nine.vercel.app/).
+
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/dashboard.png" alt="Dashboard with collection metrics and banknote of the day" width="49%" />
+  <img src="docs/screenshots/dashboard-graphs.png" alt="Dashboard with collection metrics graphs" width="49%" />
+  
+</p>
+<p align="center">
+  <img src="docs/screenshots/catalog.png" alt="Banknote catalog search results" width="49%" />
+  <img src="docs/screenshots/countries.png" alt="Interactive map of banknotes by country" width="49%" />
+</p>
+<p align="center">
+  <img src="docs/screenshots/image-search.png" alt="Image-search workflow and a matched banknote" width="49%" />
+  <img src="docs/screenshots/banknotes-and-assistant.png" alt="Banknote collection view with the AI collection assistant" width="49%" />
+</p>
 
 ## Features
 
