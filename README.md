@@ -12,7 +12,7 @@
   [![Vercel](https://img.shields.io/badge/Vercel-Hosted-000000?style=flat-square&logo=vercel&logoColor=white)](https://vercel.com/)
   [![AWS](https://img.shields.io/badge/AWS-S3_%26_IAM-232F3E?style=flat-square&logo=amazon-webservices&logoColor=white)](https://aws.amazon.com/)
 
-  [Overview](#overview) • [Features](#features) • [Architecture](#architecture) • [Project Structure](#project-structure) • [Environment Variables & Secrets](#environment-variables--secrets) • [Getting Started](#getting-started) • [Deployment](#deployment)
+  [Overview](#overview) • [Live Demo](#live-demo) • [Screenshots](#screenshots) • [Features](#features) • [Architecture](#architecture) • [Project Structure](#project-structure) • [Environment Variables & Secrets](#environment-variables--secrets) • [Getting Started](#getting-started) • [Deployment](#deployment)
 
 </div>
 
@@ -25,6 +25,26 @@
 The application pairs a modern Next.js frontend with Supabase PostgreSQL for database storage and user authentication, Upstash Redis for API caching, and Numista API integrations for global currency cataloging.
 
 All underlying cloud infrastructure, including database provisioning, caching layers, Vercel deployments, and AWS S3 database backups, is managed declaratively with Terraform and automated through GitHub Actions CI/CD workflows.
+
+## Live Demo
+
+Try the production app at [money-collection-app-nine.vercel.app](https://money-collection-app-nine.vercel.app/).
+
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/dashboard.png" alt="Dashboard with collection metrics and banknote of the day" width="49%" />
+  <img src="docs/screenshots/dashboard-graphs.png" alt="Dashboard with collection metrics graphs" width="49%" />
+  
+</p>
+<p align="center">
+  <img src="docs/screenshots/catalog.png" alt="Banknote catalog search results" width="49%" />
+  <img src="docs/screenshots/countries.png" alt="Interactive map of banknotes by country" width="49%" />
+</p>
+<p align="center">
+  <img src="docs/screenshots/image-search.png" alt="Image-search workflow and a matched banknote" width="49%" />
+  <img src="docs/screenshots/banknotes-and-assistant.png" alt="Banknote collection view with the AI collection assistant" width="49%" />
+</p>
 
 ## Features
 
@@ -46,99 +66,29 @@ All underlying cloud infrastructure, including database provisioning, caching la
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    Collector["Collector"]
+See [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) for the full architecture diagrams and design choices.
 
-    subgraph Vercel["Vercel"]
-        App["Next.js app"]
-    end
-
-    subgraph AWS["AWS Cloud"]
-        direction LR
-        Gateway["☁️ HTTP API Gateway"]
-
-        subgraph Functions["API & processing Lambdas"]
-            direction TB
-            Chat["λ Collection Chat"]
-            ImageAPI["λ Image Search API"]
-            Processor["λ Image Search Processor"]
-        end
-
-        subgraph ImageData["Image search storage"]
-            direction TB
-            Uploads[("🪣 S3 uploads")]
-            Jobs[("▤ DynamoDB jobs")]
-        end
-
-        Textract["Amazon Textract"]
-        Bedrock["Amazon Bedrock"]
-        Backups[("🪣 S3 database backups")]
-    end
-
-    subgraph Data["Application data services"]
-        direction TB
-        Supa[("Supabase<br/>PostgreSQL + Auth")]
-        Redis[("Upstash Redis cache")]
-    end
-
-    subgraph External["External services"]
-        direction TB
-        Numista["Numista"]
-        Rates["Exchange Rates"]
-        Countries["REST Countries"]
-    end
-
-    subgraph Delivery["Deployment"]
-        direction TB
-        GHA["GitHub Actions"]
-        TF["Terraform Cloud"]
-    end
-
-    Collector --> App
-    App -->|Sign-in & collection| Supa
-    App -->|Chat & image search| Gateway
-    App -->|Catalog API requests| Redis
-    Gateway --> Chat
-    Gateway --> ImageAPI
-    Chat -->|Read-only, owner-scoped| Supa
-    Chat --> Bedrock
-    ImageAPI -->|Create jobs & upload URLs| Jobs
-    ImageAPI --> Uploads
-    App -->|Upload image| Uploads
-    Uploads -->|Object-created event| Processor
-    Processor --> Jobs
-    Processor --> Textract
-    Textract -->|OCR text| Processor
-    Processor --> Bedrock
-    Processor --> Numista
-    App -->|Catalog lookup| Numista
-    App --> Rates
-    App --> Countries
-    GHA -->|Deploy & migrate| AWS
-    GHA -->|Database dumps| Backups
-    TF -->|Provision| AWS
-    TF -->|Provision| Supa
-    TF -->|Provision| Redis
-    TF -->|Provision| Vercel
-```
+At a high level, the app is designed to run at close to no cost while usage stays within free tiers of different services: Supabase provides free-tier SQL databases for dev and prod, and Vercel and Upstash currently host the frontend and cache at no cost. AWS uses serverless services (Lambda, API Gateway, S3, and DynamoDB) to avoid fixed infrastructure costs.
 
 ## Project Structure
 
 ```text
 money-collection-app/
-├── frontend/           # Next.js 14+ web app (App Router, Tailwind CSS, TypeScript, shadcn/ui)
-├── supabase/           # PostgreSQL migrations, schema, and Supabase config
+├── frontend/           # Next.js 16 web app (App Router, Tailwind, TypeScript, shadcn/ui)
+├── supabase/           # PostgreSQL migrations, seed data, and config
 ├── lambdas/
-│   ├── collection-chat-api/     # Bedrock tools and read-only collection queries
+│   ├── collection-chat-api/     # Bedrock-powered collection assistant
 │   ├── image-search-api/        # Authenticated image-search API
-│   └── image-search-processor/  # OCR and banknote catalog processing
+│   └── image-search-processor/  # OCR and catalog matching for uploaded banknote images
 ├── terraform/
 │   ├── bootstrap/      # AWS IAM OIDC setup for GitHub Actions
 │   ├── environments/   # Shared, dev, and prod Terraform roots
-│   └── modules/        # Reusable application and cloud resources
-└── .github/
-    └── workflows/      # GitHub Actions CI/CD for deployments and DB backups
+│   └── modules/        # Reusable app and cloud resources
+├── bootstrap.sh        # Applies terraform/bootstrap and exports the GitHub Actions role ARN
+├── docker-compose.yml  # Local Redis + serverless-redis-http for development
+├── .github/
+│   └── workflows/      # GitHub Actions CI/CD for Terraform deploys and database backups
+└── README.md
 ```
 
 ## Environment Variables & Secrets
@@ -207,32 +157,32 @@ For automated deployments and database backups via GitHub Actions, set the follo
    cd money-collection-app
    ```
 
-2. **Start local Supabase services:**
+2. **Start Supabase locally:**
    ```bash
    cd supabase
    supabase start
    ```
 
-   PostgreSQL will be available at `postgres://postgres:postgres@localhost:54322/postgres` for local development.
+   PostgreSQL will be available at `postgres://postgres:postgres@localhost:54322/postgres`.
 
-3. **Start local Redis:**
-   Still in the `supabase/` directory, run the following command to start the bundled serverless Redis instance:
+3. **Start Redis locally (repo root):**
    ```bash
+   cd ..
    docker compose up -d
    ```
 
-   Redis will be available at `redis://localhost:6379` for local development.
+   Redis is exposed at `redis://localhost:6379`; the HTTP proxy is on `http://localhost:8079`.
 
-4. Setup environment variables for local development. Create a `.env.local` file in the `frontend/` directory with the required variables (see [Environment Variables & Secrets](#environment-variables--secrets) section above).
+4. **Set local environment variables:** create `frontend/.env.local` with the required keys from the [Environment Variables & Secrets](#environment-variables--secrets) section.
 
-5. **Run the frontend app:**
+5. **Run the app:**
    ```bash
-   cd ../frontend
+   cd frontend
    npm install
    npm run dev
    ```
 
-6. Open [http://localhost:3000](http://localhost:3000) in your browser.
+6. Open [http://localhost:3000](http://localhost:3000).
 
 The seed data for the database includes a sample account for testing purposes:
 - Email: `test@example.com`
