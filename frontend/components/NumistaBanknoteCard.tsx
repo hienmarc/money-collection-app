@@ -8,6 +8,7 @@ export interface NumistaBanknote {
   id?: number | string
   title?: string
   obverse_thumbnail?: string
+  reverse_thumbnail?: string
   issuer?: { name?: string }
   min_year?: number
   max_year?: number
@@ -17,27 +18,48 @@ export interface NumistaBanknote {
 export function NumistaBanknoteCard({
   banknote,
   onAddToCollection,
+  showReverseThumbnail = false,
 }: {
   banknote: NumistaBanknote
   onAddToCollection: () => void
+  showReverseThumbnail?: boolean
 }) {
+  const obverseImage = banknote.obverse_thumbnail ? (
+    <img
+      src={banknote.obverse_thumbnail}
+      alt={`${banknote.title || "Banknote"} (obverse)`}
+      className="h-full w-full object-contain"
+    />
+  ) : (
+    <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+      <Info className="h-5 w-5" />
+    </div>
+  )
+
   return (
     <Card className="overflow-hidden transition-shadow hover:shadow-md">
       <CardContent className="p-0">
-        <div className="flex">
-          <div className="h-24 w-[45%] flex-shrink-0 bg-gray-100">
-            {banknote.obverse_thumbnail ? (
-              <img
-                src={banknote.obverse_thumbnail || "/placeholder.svg"}
-                alt={`${banknote.title} (obverse)`}
-                className="h-full w-full object-contain"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-                <Info className="h-5 w-5" />
+        <div className={showReverseThumbnail ? "flex flex-col" : "flex"}>
+          {showReverseThumbnail ? (
+            <div className="flex h-24 w-full flex-shrink-0 bg-gray-100">
+              <div className="w-1/2 border-r border-background">{obverseImage}</div>
+              <div className="w-1/2">
+                {banknote.reverse_thumbnail ? (
+                  <img
+                    src={banknote.reverse_thumbnail}
+                    alt={`${banknote.title || "Banknote"} (reverse)`}
+                    className="h-full w-full object-contain"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                    <Info className="h-5 w-5" />
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="h-24 w-[45%] flex-shrink-0 bg-gray-100">{obverseImage}</div>
+          )}
           <div className="relative flex flex-1 flex-col justify-between p-3">
             <div>
               <h3 className="mb-1 line-clamp-1 text-sm font-medium">{banknote.title}</h3>

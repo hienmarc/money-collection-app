@@ -4,7 +4,7 @@ The `supabase` directory contains the database migration scripts, table schemas,
 
 ## Overview & Role
 
-- **Database Schema**: Defines core entities including `banknotes`, `currencies` and `countries`, along with custom enum types such as banknote grading scales (`G`, `VG`, `F`, `VF`, `XF`, `AU`, `UNC`).
+- **Database Schema**: Defines core entities including `banknotes`, `currencies`, and `countries`, along with custom enum types such as banknote grading scales (`G`, `VG`, `F`, `VF`, `XF`, `AU`, `UNC`).
 - **Security & Multi-Tenancy**: Implements PostgreSQL Row Level Security (RLS) policies (`"ownerid" = "auth"."uid"()`) to ensure private collection item isolation across users.
 - **Local Seed Data**: Provides `supabase/seed.sql` containing preconfigured test accounts and sample banknote inventory data automatically populated during local development (`supabase start` or `supabase db reset`).
 - **Migration Management**: Stores schema changes in `supabase/migrations/`, applied locally with `npx supabase migration up --local` and pushed to the linked cloud project with `npx supabase db push` (also used by the deployment workflow).

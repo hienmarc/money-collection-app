@@ -1,6 +1,6 @@
 # Frontend
 
-The `frontend` directory contains the web application user interface for the **Money Collection App**, built using **Next.js 14+** (App Router), **TypeScript**, **Tailwind CSS** and **shadcn/ui** components. 
+The `frontend` directory contains the web application user interface for the **Money Collection App**, built with **Next.js 16** (App Router), **TypeScript**, **Tailwind CSS**, and **shadcn/ui** components.
 
 ## Overview & Role
 
@@ -9,7 +9,7 @@ The `frontend` directory contains the web application user interface for the **M
 - **Data & Auth**: Integrates directly with Supabase via `@supabase/ssr` and `@supabase/supabase-js` for user authentication and PostgreSQL data management, while leveraging Upstash Redis for caching third-party API data.
 - **Deployment**: Managed as a Next.js framework deployment on Vercel, configured and deployed automatically via the root Terraform configurations.
 
-For local image-search use, set `NEXT_PUBLIC_IMAGE_SEARCH_API_URL` in `frontend/.env.local` to the `image_search_api_url` Terraform output for a deployed dev or prod environment. The API validates the signed-in user's Supabase session. Uploaded images and search records expire after three days.
+For local image-search use, set `NEXT_PUBLIC_IMAGE_SEARCH_API_URL` in `frontend/.env.local` to the `image_search_api_url` Terraform output for a deployed dev or prod environment. The API validates the signed-in user's Supabase session. Uploaded images and search records expire after three days. Local Redis for app-side caching is started from the repo root via `docker compose up -d`.
 
 ## User roles
 

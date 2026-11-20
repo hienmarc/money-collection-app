@@ -1,0 +1,119 @@
+<mxfile host="app.diagrams.net" agent="Antigravity">
+  <diagram id="money-collection-cicd-aligned" name="CI/CD Architecture">
+    <mxGraphModel dx="1468" dy="840" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1780" pageHeight="960" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;fontSize=22;fontStyle=1;fontColor=#0F172A;align=left;verticalAlign=middle;" value="Money Collection App — CI/CD &amp; Automation Architecture" vertex="1">
+          <mxGeometry height="35" width="750" x="50" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" parent="1" style="text;html=1;fontSize=12;fontColor=#64748B;align=left;verticalAlign=middle;" value="High-Level Pipelines, Infrastructure as Code, Database Migrations &amp; Daily S3 Backups" vertex="1">
+          <mxGeometry height="20" width="750" x="50" y="65" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-triggers" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#F8FAFC;strokeColor=#CBD5E1;strokeWidth=1.5;dashed=1;verticalAlign=top;align=left;spacingLeft=15;spacingTop=10;fontSize=12;fontStyle=1;fontColor=#475569;" value="Triggers" vertex="1">
+          <mxGeometry height="760" width="180" x="30" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="node-trigger-push" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFFFFF;strokeColor=#475569;strokeWidth=1.5;fontColor=#0F172A;fontSize=11;" value="&lt;b&gt;Code Push&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:10px;color:#64748B;&quot;&gt;dev &amp; main branches&lt;br&gt;(lambdas, tf, supabase)&lt;/span&gt;" vertex="1">
+          <mxGeometry height="75" width="150" x="45" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="node-trigger-cron" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFFFFF;strokeColor=#475569;strokeWidth=1.5;fontColor=#0F172A;fontSize=11;" value="&lt;b&gt;Daily Cron Schedule&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:10px;color:#64748B;&quot;&gt;02:00 UTC (Daily)&lt;br&gt;or manual dispatch&lt;/span&gt;" vertex="1">
+          <mxGeometry height="75" width="150" x="45" y="665" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-gha" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#F1F5F9;strokeColor=#24292F;strokeWidth=2;verticalAlign=top;align=left;spacingLeft=15;spacingTop=10;fontSize=12;fontStyle=1;fontColor=#24292F;" value="GitHub Actions Orchestrator (Ubuntu Runners)" vertex="1">
+          <mxGeometry height="760" width="290" x="270" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="node-gha-deploy" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFFFFF;strokeColor=#0284C7;strokeWidth=2;fontColor=#0F172A;fontSize=11;" value="&lt;b&gt;GitHub Actions&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size: 11px; color: rgb(3, 105, 161);&quot;&gt;&lt;b&gt;Deployment Pipeline (deploy.yml)&lt;/b&gt;&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size: 10px; color: rgb(100, 116, 139);&quot;&gt;• Build Lambdas (Node.js 22)&lt;br&gt;• Run Terraform plan &amp;amp; apply&lt;br&gt;• Push Supabase SQL migrations&lt;/span&gt;" vertex="1">
+          <mxGeometry height="105" width="250" x="290" y="185" as="geometry" />
+        </mxCell>
+        <mxCell id="node-gha-oidc" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#FFF1F2;strokeColor=#DD344C;strokeWidth=1.5;fontColor=#991B1B;fontSize=11;" value="&lt;b&gt;AWS IAM OIDC Integration&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:10px;color:#991B1B;&quot;&gt;Passwordless STS Role Assumption&lt;br&gt;Eliminates static AWS secrets&lt;/span&gt;" vertex="1">
+          <mxGeometry height="65" width="250" x="290" y="530" as="geometry" />
+        </mxCell>
+        <mxCell id="node-gha-backup" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFFFFF;strokeColor=#7AA116;strokeWidth=2;fontColor=#0F172A;fontSize=11;" value="&lt;b&gt;GitHub Actions&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:11px;color:#4D7C0F;&quot;&gt;&lt;b&gt;DB Backup Pipeline (backup-db.yml)&lt;/b&gt;&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:10px;color:#64748B;&quot;&gt;• Dump Supabase SQL partitions&lt;br&gt;  (roles, schemas, data)&lt;br&gt;• Upload SQL dumps to Amazon S3&lt;/span&gt;" vertex="1">
+          <mxGeometry height="105" width="250" x="290" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-tfcloud" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#FAF5FF;strokeColor=#7C3AED;strokeWidth=2;verticalAlign=top;align=left;spacingLeft=15;spacingTop=10;fontSize=12;fontStyle=1;fontColor=#5B21B6;" value="Terraform Cloud" vertex="1">
+          <mxGeometry height="210" width="260" x="645" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="node-tfcloud" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#FFFFFF;strokeColor=#7C3AED;strokeWidth=1.5;fontColor=#5B21B6;fontSize=11;" value="&lt;b&gt;Terraform Cloud&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:10px;color:#5B21B6;&quot;&gt;app.terraform.io&lt;br&gt;&lt;br&gt;• Remote state storage &amp; locking&lt;br&gt;• Cross-workspace outputs sharing&lt;br&gt;• Environments: shared, dev, prod&lt;/span&gt;" vertex="1">
+          <mxGeometry height="135" width="220" x="665" y="165" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-shared-ext" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#F8FAFC;strokeColor=#0F172A;strokeWidth=1.5;verticalAlign=top;align=left;spacingLeft=15;spacingTop=10;fontSize=12;fontStyle=1;fontColor=#0F172A;" value="Shared Infrastructure (Vercel &amp; Upstash)" vertex="1">
+          <mxGeometry height="195" width="260" x="645" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="node-vercel" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontColor=#000000;fontSize=11;" value="&lt;b&gt;Vercel Project&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:10px;color:#0F172A;&quot;&gt;Next.js App Deployment&lt;/span&gt;" vertex="1">
+          <mxGeometry height="55" width="220" x="665" y="405" as="geometry" />
+        </mxCell>
+        <mxCell id="node-upstash" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#FFFFFF;strokeColor=#00E9A3;strokeWidth=1.5;fontColor=#065F46;fontSize=11;" value="&lt;b&gt;Upstash Redis&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:10px;color:#047857;&quot;&gt;Shared REST Cache Instance&lt;/span&gt;" vertex="1">
+          <mxGeometry height="55" width="220" x="665" y="475" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-supabase" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#F0FDF4;strokeColor=#3ECF8E;strokeWidth=2;verticalAlign=top;align=left;spacingLeft=15;spacingTop=10;fontSize=12;fontStyle=1;fontColor=#15803D;" value="Supabase Cloud" vertex="1">
+          <mxGeometry height="295" width="355" x="645" y="585" as="geometry" />
+        </mxCell>
+        <mxCell id="node-supabase-db" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#FFFFFF;strokeColor=#3ECF8E;strokeWidth=2;fontColor=#065F46;fontSize=11;" value="&lt;b&gt;Supabase PostgreSQL &amp; Auth&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:10px;color:#15803D;&quot;&gt;• Receives schema migrations via &lt;i&gt;supabase db push&lt;/i&gt;&lt;br&gt;• Source database for daily &lt;i&gt;supabase db dump&lt;/i&gt;&lt;br&gt;  (roles, schemas, data SQL partitions)&lt;/span&gt;" vertex="1">
+          <mxGeometry height="95" width="315" x="665" y="635" as="geometry" />
+        </mxCell>
+        <mxCell id="node-supabase-note" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=6;fillColor=#FFFFFF;strokeColor=#94A3B8;strokeWidth=1;fontColor=#475569;fontSize=10;" value="&lt;b&gt;Supabase CLI Tooling&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:10px;color:#64748B;&quot;&gt;Linked by Terraform output (&lt;i&gt;supabase_project_id&lt;/i&gt;)&lt;/span&gt;" vertex="1">
+          <mxGeometry height="45" width="315" x="665" y="755" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-aws" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#FFFFFF;strokeColor=#232F3E;strokeWidth=2.5;verticalAlign=top;align=left;spacingLeft=15;spacingTop=10;fontSize=12;fontStyle=1;fontColor=#232F3E;" value="AWS Cloud (Serverless Infrastructure &amp; Storage)" vertex="1">
+          <mxGeometry height="760" width="520" x="1100" y="122.5" as="geometry" />
+        </mxCell>
+        <mxCell id="node-aws-stack" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#F8FAFC;strokeColor=#ED7100;strokeWidth=2;fontColor=#0F172A;fontSize=11;" value="&lt;b&gt;AWS Serverless Application Stack&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:10px;color:#64748B;&quot;&gt;• API Gateway (HTTP routes /v1)&lt;br&gt;• Lambdas (Collection Chat &amp; Image Search API)&lt;br&gt;• DynamoDB (Job Store with TTL)&lt;br&gt;• Secrets Manager (DB Credentials)&lt;/span&gt;" vertex="1">
+          <mxGeometry height="115" width="465" x="1130" y="182.5" as="geometry" />
+        </mxCell>
+        <mxCell id="node-aws-iam-desc" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#FFF1F2;strokeColor=#DD344C;strokeWidth=1;fontColor=#991B1B;fontSize=10;" value="&lt;b&gt;Scoped Role Permissions&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:10px;color:#64748B;&quot;&gt;Configured via &lt;i&gt;terraform/bootstrap&lt;/i&gt;&lt;br&gt;Short-lived STS token validation per workflow run&lt;/span&gt;" vertex="1">
+          <mxGeometry height="55" width="355" x="1240" y="427.5" as="geometry" />
+        </mxCell>
+        <mxCell id="node-aws-s3-backups" parent="1" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#7AA116;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;fontStyle=1;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.s3;" value="&lt;b&gt;S3 — DB Backups Bucket&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:10px;color:#64748B;&quot;&gt;roles / schemas / data .sql&lt;/span&gt;" vertex="1">
+          <mxGeometry height="65" width="65" x="1140" y="662.5" as="geometry" />
+        </mxCell>
+        <mxCell id="node-aws-s3-desc" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#F7FEE7;strokeColor=#7AA116;strokeWidth=1.5;fontColor=#3F6212;fontSize=10;" value="&lt;b&gt;Daily Encrypted PostgreSQL Backups&lt;/b&gt;&lt;span style=&quot;font-size: 10px; color: rgb(63, 98, 18);&quot;&gt;&lt;br&gt;• 30-day lifecycle automatic deletion rule&lt;br&gt;• Granular restore capability (roles, schemas, data)&lt;/span&gt;" vertex="1">
+          <mxGeometry height="85" width="355" x="1240" y="652.5" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-push-gha" edge="1" parent="1" source="node-trigger-push" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284C7;strokeWidth=2;fontColor=#0369A1;fontSize=11;" target="node-gha-deploy" value="Triggers Deploy">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-gha-tfcloud" edge="1" parent="1" source="node-gha-deploy" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7C3AED;strokeWidth=2;fontColor=#5B21B6;fontSize=11;" target="node-tfcloud" value="Syncs State &amp; Plan">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-tf-aws" edge="1" parent="1" source="node-tfcloud" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0284C7;strokeWidth=2;fontColor=#0369A1;fontSize=11;" target="node-aws-stack" value="Applies AWS Resources">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-deploy-shared" edge="1" parent="1" source="node-gha-deploy" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0F172A;strokeWidth=1.5;fontColor=#0F172A;fontSize=10;exitX=0.596;exitY=0.997;entryX=0;entryY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;" value="Provisions Frontend &amp; Cache">
+          <mxGeometry relative="1" x="-0.0373" as="geometry">
+            <Array as="points">
+              <mxPoint x="440" y="289.7" />
+              <mxPoint x="440" y="417.5" />
+            </Array>
+            <mxPoint x="440" y="275" as="sourcePoint" />
+            <mxPoint x="665" y="417.4999999999999" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-deploy-supa" edge="1" parent="1" source="node-gha-deploy" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#15803D;strokeWidth=1.5;fontColor=#15803D;fontSize=10;exitX=0.4;exitY=1;entryX=0;entryY=0.25;" target="node-supabase-db" value="Pushes SQL Migrations (supabase db push)">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="390" y="659" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-gha-iam" edge="1" parent="1" source="node-gha-oidc" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#DD344C;strokeWidth=2;fontColor=#991B1B;fontSize=11;" value="Assume Role via OIDC Token">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1172.5" y="487.5" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-cron-gha" edge="1" parent="1" source="node-trigger-cron" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7AA116;strokeWidth=2;fontColor=#3F6212;fontSize=11;" target="node-gha-backup" value="Triggers Backup">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-backup-dump" edge="1" parent="1" source="node-gha-backup" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#15803D;strokeWidth=2;fontColor=#15803D;fontSize=11;" target="node-supabase-db" value="supabase db dump">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-backup-s3" edge="1" parent="1" source="node-supabase-db" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7AA116;strokeWidth=2.5;fontColor=#3F6212;fontSize=11;" target="node-aws-s3-backups" value="Uploads Daily&amp;nbsp;&lt;div&gt;Dumps&lt;/div&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="5ae23vUDtFg8sFdfd5VM-1" parent="1" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=1;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.secrets_manager;" value="&lt;b&gt;Secrets Manager&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:10px;color:#64748B;&quot;&gt;Supabase DB Credentials&lt;/span&gt;" vertex="1">
+          <mxGeometry height="78" width="78" x="1130" y="405" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
