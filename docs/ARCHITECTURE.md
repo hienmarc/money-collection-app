@@ -59,11 +59,11 @@ The system is intentionally built around cost-sensitive choices:
 
 - Supabase is the main database layer because it offers free Postgres databases and a very quick path to a working production-ready SQL setup.
 - Vercel is used for the frontend because it is the easiest way to deploy and operate a Next.js app quickly and reliably.
-- AWS is used mainly for serverless products (Lambda, API Gateway, S3, DynamoDB) so the project avoids large fixed infrastructure costs.
-- Upstash Redis is used because it has a free tier and is a pragmatic cache for expensive third-party API calls.
+- AWS is used mainly for serverless services (Lambda, API Gateway, S3, DynamoDB) so the project avoids large fixed infrastructure costs.
+- Upstash Redis is used because it has a free tier and is used as a cache to limit cost related to third-party API calls.
 - Terraform is used to unify deployment and infrastructure management across providers.
 
-The key trade-off is that this architecture prioritizes speed, simplicity, and lowest cost early, not maximum performance at all costs. This is a deliberate choice for a personal project that does not have a large user base but still needs to stay available and reliable.
+The key trade-off is that this architecture prioritizes speed, simplicity, and lowest cost early, not maximum performance at all costs. Another downside is that deployement is spread across multiple providers, which may increase complexity in management and monitoring. This is a deliberate choice for a personal project that does not have a large user base but still needs to stay available and reliable at low cost.
 
 ## 1) Frontend: Vercel + Next.js
 
@@ -72,13 +72,13 @@ The frontend is the user-facing app where collectors browse their notes, manage 
 
 ### Why this technology was chosen
 
-- Next.js was chosen because it was already the easiest way to build a polished UI quickly, especially at the start when a working product mattered more than perfect infrastructure decisions.
+- Next.js was chosen because it was an easy way to build a polished UI quickly and it has a strong ecosystem of components and libraries.
 - Vercel was selected because it is the simplest and lowest-friction way to deploy a Next.js app.
 - This allowed the project to reach a usable state quickly without spending time on custom hosting and CI/CD plumbing.
 
 ### Known cons
 
-- The app embeds some API route logic, which makes a future migration to a different hosting model slightly more cumbersome.
+- The app embeds some API route logic, which makes a future migration to a different hosting model slightly more complex.
 - Vercel is convenient, but it is not the cheapest possible hosting option in the long term for a very large or highly customized deployment.
 
 ### Planned changes
@@ -89,24 +89,25 @@ The frontend is the user-facing app where collectors browse their notes, manage 
 ## 2) Main database: Supabase Postgres
 
 ### Role
-Supabase is the system of record for user data, collection items, country and currency metadata, and the authorization model around private collection data.
+Supabase is the system of record for user data, collection items, country and currency information, and the authorization model around private collection data.
 
 ### Why this technology was chosen
 
-- The main reason is cost: Supabase offers free-tier Postgres databases, which is a strong fit for both development and production usage in a small project.
+- The main reason is cost and ease of use: Supabase offers free-tier Postgres databases, which is a strong fit for both development and production usage in a small project.
 - There are two free databases used for DEV and PROD environments.
+- Supabase provides a simple way to manage authentication as well as database migrations and schema changes, which is important for a project that is still evolving.
 - Postgres is well suited to the data model: collections, metadata, ownership, and relational links are a natural fit for SQL.
 - The project already had a previous version built around a SQL database, so migrating the data was straightforward.
+- This architecture intentionally avoids AWS RDS because it does not offer a reasonable free-tier path comparable to Supabase for the current stage of the project.
 
 ### Known cons
 
 - Supabase is a managed service, so some infrastructure flexibility is reduced compared to self-hosting or using a raw AWS database service.
-- This architecture intentionally avoids AWS SQL options because they do not offer a reasonable free-tier path comparable to Supabase for the current stage of the project.
 
 ### Planned changes
 
 - No major database migration is planned at the moment.
-- If the application grows significantly, the database may eventually need more careful performance tuning and operational review, but the current model remains a good fit for the project’s scale.
+- If the application was to grow significantly, the database may eventually need more careful performance tuning and operational review, but the current model remains a good fit for the project’s scale.
 
 ## 3) Cache layer: Upstash Redis
 
@@ -115,43 +116,48 @@ The Redis layer is used as a cache for third-party API results so repeated calls
 
 ### Why this technology was chosen
 
+- The main reason for the cache is for Numista, exchange-rate, and country-data lookups, because it helps avoid hitting API quotas too quickly when repeated requests would otherwise consume the limited monthly or daily allowance.
 - Upstash Redis has a free tier, which matches the project’s cost-first strategy.
 - Redis is useful here because many API responses are repeated across users and requests.
-- The cache is especially valuable for Numista, exchange-rate, and country-data lookups, because it helps avoid hitting API quotas too quickly when repeated requests would otherwise consume the limited monthly or daily allowance.
+
 
 ### Known cons
 
 - Upstash offers a single free database, which is why DEV and PROD share the same Redis instance.
-- This is acceptable because the cached data is not critical business data; it is mostly request deduplication and short-lived API response caching.
+   - For now, this is acceptable because the cached data is not critical business data. It is mostly request deduplication and short-lived API response caching. And data from environment-specific databases is not cached in Redis, so there is no risk of cross-environment data contamination.
 - Redis is a fast cache, but the project does not require true in-memory latency for every workload, so this layer is not overly critical from a business standpoint.
 
 ### Planned changes
 
-- The project has a known future direction of replacing this cache with DynamoDB for better cost alignment and storage semantics.
-- The reason is that the project does not strictly need the speed advantages of in-memory Redis for a read-through cache of mostly lightweight API responses.
-- DynamoDB would also be easier to align with a more AWS-native serverless architecture.
+- It is planned to replace the Redis cache with using DynamoDB as API cache.
+   - DynamoDB supports TTL and is a good fit for caching API responses, which are mostly lightweight JSON objects.
+   - For our use case, in-memory cache is not necessary
+   - DynamoDB would permit us to have two separate caches for DEV and PROD, which is a better long-term architecture.
 
 ## 4) AWS layer: serverless-first application infrastructure
 
 ### Role
-AWS hosts the serverless API and processing parts of the app: the public HTTP layer, LLM-powered collection assistant, image search API, and the asynchronous OCR / AI processing pipeline.
+AWS hosts the serverless API and processing parts of the app: 
+- the public HTTP layer, 
+- LLM-powered collection assistant, 
+- image search API and the asynchronous OCR / AI image processing pipeline.
 
 ### Why this technology was chosen
 
 - The project uses serverless for almost everything in AWS to keep fixed costs as low as possible.
 - Lambda, API Gateway, S3, and DynamoDB allow workloads to scale without paying for always-on compute.
-- This is a good fit for an app with irregular demand and a need to keep costs predictable.
+- This is a good cost-effective fit for an app with that needs to be available at all times but with low and irregular demand.
 
 ### Known cons
 
-- Serverless adds more operational indirection than a single VM or traditional service cluster.
-- Event-driven systems can be harder to debug than a simpler monolithic application.
+- A Serverless event-driven systems can be harder to debug than a simpler monolithic application.
 - Some features require multiple small services and more configuration compared to hosting everything in one runtime.
 
 ### Planned changes
 
 - Keep the architecture serverless-first unless the workload grows enough to justify a different model.
 - Continue to favor simple, small, decoupled services over broader platform building.
+- Integrate the API requests handled by the Next.js api routes into the AWS API Gateway and Lambda layer to reduce the number of different hosting models in use.
 
 ## 5) AWS Lambdas: collection chat and image processing
 
@@ -166,14 +172,13 @@ The Lambda functions power the AI collection assistant and the image-search work
 
 ### Known cons
 
-- JavaScript lambdas are simple, but they are not the best choice for every heavy-processing workload.
+- JavaScript lambdas are simple, but they are not the best choice for every heavy-processing workload (which so far is not a problem for the current workloads).
 - Python is better for image manipulation, but it creates a little more language diversity in the stack.
-- Lambda cold starts can affect response time when traffic is low.
+- Lambda cold starts can affect response time when traffic is low (not a concern for now).
 
 ### Planned changes
 
 - Keep JavaScript for the main service APIs unless a specific use case clearly benefits from another runtime.
-- Continue exploring Python-based preprocessing in the image pipeline as the feature set grows.
 
 ## 6) Terraform and Terraform Cloud
 
@@ -188,36 +193,14 @@ Terraform centralizes infrastructure setup for Vercel, Supabase, Upstash, and AW
 
 ### Known cons
 
-- Infrastructure as code can be harder to debug when config changes are not applied in the intended order.
-- Dependency on Terraform Cloud introduces a managed platform dependency, even though that is a practical choice for a small team.
+- Dependency on Terraform Cloud introduces a managed platform dependency.
 
 ### Planned changes
 
-- Keep Terraform as the single source of truth for platform resources.
-- If the infrastructure becomes more complex, the project may eventually need more explicit modularization and environment governance, but the current setup is already a good fit for the project size.
+- No planned change. Terraform will be kept as the single source of truth for platform resources.
 
-## 7) Why SQL instead of NoSQL
 
-### Role
-The main data store is relational SQL because the app’s data is structured and linked: users, banknotes, countries, currencies, grades, ownership, and metadata.
-
-### Why this technology was chosen
-
-- SQL maps well to the data model and makes it easier to maintain relationships and constraints.
-- The project had a previous version based on SQL, so migration effort was reduced.
-- Transactions, validation, and filtering are easier to reason about in a relational model for this kind of collection application.
-
-### Known cons
-
-- SQL is less flexible than document-oriented NoSQL when the model is very dynamic or fast-changing.
-- Some analytics use cases can be easier to implement with document stores, but that is not the primary need here.
-
-### Planned changes
-
-- No major shift away from SQL is expected in the near term.
-- If the app grows into a much more analytics-heavy, semi-structured product, some derived data or cache-backed read models may be introduced, but the base database is likely to remain relational.
-
-## 8) CI/CD and database backups
+## 7) CI/CD and database backups
 
 ### Role
 GitHub Actions automates infrastructure deployment, Lambda checks and builds, Supabase migrations, and production database backups. Terraform Cloud stores Terraform state for the shared, dev, prod, and bootstrap workspaces.
@@ -243,7 +226,7 @@ GitHub Actions automates infrastructure deployment, Lambda checks and builds, Su
 
 ### Planned changes
 
-- No specific CI/CD or backup redesign is currently planned. Keep deployment and backup workflows aligned with infrastructure changes, and verify restore procedures when the database or backup format changes.
+- No specific CI/CD or backup redesign is currently planned.
 
 ## Summary
 
