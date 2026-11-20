@@ -66,86 +66,9 @@ Try the production app at [money-collection-app-nine.vercel.app](https://money-c
 
 ## Architecture
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design notes and rationale.
+See [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) for the full architecture diagrams and design choices.
 
-At a high level, the app is designed to run at no cost while usage stays within free tiers: Supabase provides free-tier SQL databases for dev and prod, and Vercel and Upstash currently host the frontend and cache at no cost. AWS uses serverless services (Lambda, API Gateway, S3, and DynamoDB) to avoid fixed infrastructure costs.
-
-```mermaid
-flowchart LR
-    Collector["Collector"]
-
-    subgraph Vercel["Vercel"]
-        App["Next.js app"]
-    end
-
-    subgraph AWS["AWS Cloud"]
-        direction LR
-        Gateway["☁️ HTTP API Gateway"]
-
-        subgraph Functions["API & processing Lambdas"]
-            direction TB
-            Chat["λ Collection Chat"]
-            ImageAPI["λ Image Search API"]
-            Processor["λ Image Search Processor"]
-        end
-
-        subgraph ImageData["Image search storage"]
-            direction TB
-            Uploads[("🪣 S3 uploads")]
-            Jobs[("▤ DynamoDB jobs")]
-        end
-
-        Textract["Amazon Textract"]
-        Bedrock["Amazon Bedrock"]
-        Backups[("🪣 S3 database backups")]
-    end
-
-    subgraph Data["Application data services"]
-        direction TB
-        Supa[("Supabase<br/>PostgreSQL + Auth")]
-        Redis[("Upstash Redis cache")]
-    end
-
-    subgraph External["External services"]
-        direction TB
-        Numista["Numista"]
-        Rates["Exchange Rates"]
-        Countries["REST Countries"]
-    end
-
-    subgraph Delivery["Deployment"]
-        direction TB
-        GHA["GitHub Actions"]
-        TF["Terraform Cloud"]
-    end
-
-    Collector --> App
-    App -->|Sign-in & collection| Supa
-    App -->|Chat & image search| Gateway
-    App -->|Catalog API requests| Redis
-    Gateway --> Chat
-    Gateway --> ImageAPI
-    Chat -->|Read-only, owner-scoped| Supa
-    Chat --> Bedrock
-    ImageAPI -->|Create jobs & upload URLs| Jobs
-    ImageAPI --> Uploads
-    App -->|Upload image| Uploads
-    Uploads -->|Object-created event| Processor
-    Processor --> Jobs
-    Processor --> Textract
-    Textract -->|OCR text| Processor
-    Processor --> Bedrock
-    Processor --> Numista
-    App -->|Catalog lookup| Numista
-    App --> Rates
-    App --> Countries
-    GHA -->|Deploy & migrate| AWS
-    GHA -->|Database dumps| Backups
-    TF -->|Provision| AWS
-    TF -->|Provision| Supa
-    TF -->|Provision| Redis
-    TF -->|Provision| Vercel
-```
+At a high level, the app is designed to run at close to no cost while usage stays within free tiers of different services: Supabase provides free-tier SQL databases for dev and prod, and Vercel and Upstash currently host the frontend and cache at no cost. AWS uses serverless services (Lambda, API Gateway, S3, and DynamoDB) to avoid fixed infrastructure costs.
 
 ## Project Structure
 

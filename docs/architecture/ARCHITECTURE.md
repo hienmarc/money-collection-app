@@ -11,54 +11,11 @@ The overall strategy is:
 
 ## High-level architecture
 
-```mermaid
-flowchart LR
-    User[Collector]
+### System Architecture
+![High-level architecture diagram](./diagrams/architecture-diagram.drawio.svg)
 
-    subgraph Vercel[Frontend hosting]
-        Frontend[Next.js app]
-    end
-
-    subgraph Supabase[Managed SQL]
-        DB[(Supabase Postgres)]
-    end
-
-    subgraph AWS[AWS serverless layer]
-        API[API Gateway]
-        Chat[Lambda: collection chat]
-        ImageAPI[Lambda: image search API]
-        Processor[Lambda: image processor]
-        S3[(S3 bucket)]
-        DDB[(DynamoDB jobs)]
-        Textract[Amazon Textract]
-        Bedrock[Amazon Bedrock]
-    end
-
-    subgraph Cache[Cached API layer]
-        Redis[(Upstash Redis)]
-    end
-
-    User --> Frontend
-    Frontend --> DB
-    Frontend --> API
-    Frontend --> Redis
-
-    API --> Chat
-    API --> ImageAPI
-    ImageAPI --> S3
-    ImageAPI --> DDB
-    S3 --> Processor
-    Processor --> DDB
-    Processor -->|OCR request| Textract
-    Textract -->|Extracted text| Processor
-    Processor -->|Image identification| Bedrock
-    Bedrock -->|Identification result| Processor
-
-    Chat --> DB
-    Chat --> Bedrock
-    Frontend --> External[Numista / Exchange Rates / REST Countries]
-    Redis --> External
-```
+### CI/CD & Automation Architecture
+![CI/CD & Automation diagram](./diagrams/cicd-diagram.drawio.svg)
 
 ## Architectural decisions and cost-first principles
 

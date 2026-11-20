@@ -1,0 +1,197 @@
+<mxfile host="app.diagrams.net" agent="Antigravity">
+  <diagram id="money-collection-arch" name="Architecture">
+    <mxGraphModel dx="1180" dy="675" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2050" pageHeight="1150" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;fontSize=24;fontStyle=1;fontColor=#1E293B;align=left;verticalAlign=middle;" value="Money Collection App — System Architecture" vertex="1">
+          <mxGeometry height="40" width="600" x="50" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" parent="1" style="text;html=1;fontSize=13;fontColor=#64748B;align=left;verticalAlign=middle;" value="Clloud Banknote Catalog with AI Identification &amp;amp; Real-time Valuation" vertex="1">
+          <mxGeometry height="25" width="600" x="50" y="65" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-client" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=6;fillColor=#F8FAFC;strokeColor=#CBD5E1;strokeWidth=1.5;dashed=1;verticalAlign=top;align=left;spacingLeft=15;spacingTop=10;fontSize=12;fontStyle=1;fontColor=#475569;" value="User / Browser" vertex="1">
+          <mxGeometry height="190" width="160" x="50" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-vercel" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=6;fillColor=#F8FAFC;strokeColor=#000000;strokeWidth=2;verticalAlign=top;align=left;spacingLeft=15;spacingTop=10;fontSize=12;fontStyle=1;fontColor=#000000;" value="Vercel Cloud" vertex="1">
+          <mxGeometry height="190" width="220" x="250" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-supabase" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=6;fillColor=#F0FDF4;strokeColor=#3ECF8E;strokeWidth=2;verticalAlign=top;align=left;spacingLeft=15;spacingTop=10;fontSize=12;fontStyle=1;fontColor=#15803D;" value="Supabase Cloud" vertex="1">
+          <mxGeometry height="170" width="260" x="540" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-upstash" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=6;fillColor=#F0FDF4;strokeColor=#00E9A3;strokeWidth=2;verticalAlign=top;align=left;spacingLeft=15;spacingTop=10;fontSize=12;fontStyle=1;fontColor=#047857;" value="Upstash Cloud" vertex="1">
+          <mxGeometry height="170" width="220" x="250" y="580" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-external" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=6;fillColor=#F8FAFC;strokeColor=#94A3B8;strokeWidth=2;verticalAlign=top;align=left;spacingLeft=15;spacingTop=10;fontSize=12;fontStyle=1;fontColor=#475569;" value="External Services / APIs" vertex="1">
+          <mxGeometry height="170" width="550" x="250" y="830" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-aws" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=7;fillColor=#FFFFFF;strokeColor=#232F3E;strokeWidth=2.5;verticalAlign=top;align=left;spacingLeft=20;spacingTop=12;fontSize=13;fontStyle=1;fontColor=#232F3E;" value="AWS Cloud (Serverless Infrastructure)" vertex="1">
+          <mxGeometry height="890" width="890" x="870" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="node-collector" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.5;fontColor=#0F172A;fontSize=12;" value="&lt;b&gt;Banknote Collector&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:10px;color:#64748B;&quot;&gt;Web Browser / Mobile&lt;/span&gt;" vertex="1">
+          <mxGeometry height="65" width="130" x="65" y="375" as="geometry" />
+        </mxCell>
+        <mxCell id="node-nextjs" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=2;fontColor=#000000;fontSize=12;" value="&lt;b&gt;Next.js App&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:10px;color:#64748B;&quot;&gt;App Router / Server Actions&lt;br&gt;Auth Middleware&lt;/span&gt;" vertex="1">
+          <mxGeometry height="75" width="170" x="275" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="node-supabase" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFFFFF;strokeColor=#3ECF8E;strokeWidth=2;fontColor=#065F46;fontSize=12;" value="&lt;b&gt;Supabase&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:10px;color:#047857;&quot;&gt;PostgreSQL with RLS&lt;br&gt;GoTrue Auth Service&lt;/span&gt;" vertex="1">
+          <mxGeometry height="75" width="210" x="565" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="node-redis" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFFFFF;strokeColor=#00E9A3;strokeWidth=2;fontColor=#065F46;fontSize=12;" value="&lt;b&gt;Upstash Redis&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:10px;color:#047857;&quot;&gt;Serverless REST API Cache&lt;br&gt;Quota Protection &amp; Fast Hits&lt;/span&gt;" vertex="1">
+          <mxGeometry height="75" width="170" x="275" y="630" as="geometry" />
+        </mxCell>
+        <mxCell id="node-numista" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFFFFF;strokeColor=#94A3B8;strokeWidth=1.5;fontColor=#0F172A;fontSize=12;" value="&lt;b&gt;Numista API&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:10px;color:#64748B;&quot;&gt;Banknote Catalog &amp; Details&lt;/span&gt;" vertex="1">
+          <mxGeometry height="65" width="150" x="275" y="885" as="geometry" />
+        </mxCell>
+        <mxCell id="node-exchange" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFFFFF;strokeColor=#94A3B8;strokeWidth=1.5;fontColor=#0F172A;fontSize=12;" value="&lt;b&gt;Exchange Rates API&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:10px;color:#64748B;&quot;&gt;Real-time Currency FX&lt;/span&gt;" vertex="1">
+          <mxGeometry height="65" width="155" x="625" y="882.5" as="geometry" />
+        </mxCell>
+        <mxCell id="node-countries" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#FFFFFF;strokeColor=#94A3B8;strokeWidth=1.5;fontColor=#0F172A;fontSize=12;" value="&lt;b&gt;REST Countries&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:10px;color:#64748B;&quot;&gt;Country Metadata &amp; Flags&lt;/span&gt;" vertex="1">
+          <mxGeometry height="65" width="150" x="455" y="882" as="geometry" />
+        </mxCell>
+        <mxCell id="node-apigw" parent="1" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#E7157B;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=1;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.api_gateway;" value="&lt;b&gt;API Gateway&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:10px;color:#64748B;&quot;&gt;HTTP API (/v1)&lt;br&gt;CORS &amp; JWT Validated&lt;/span&gt;" vertex="1">
+          <mxGeometry height="78" width="78" x="930" y="368" as="geometry" />
+        </mxCell>
+        <mxCell id="node-chat-lambda" parent="1" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#ED7100;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=1;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.lambda;" value="&lt;b&gt;Collection Chat Lambda&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:10px;color:#64748B;&quot;&gt;Node.js 20 / TypeScript&lt;br&gt;Postgres Query &amp; Bedrock Prompt&lt;/span&gt;" vertex="1">
+          <mxGeometry height="78" width="78" x="1140" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="node-secrets" parent="1" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=1;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.secrets_manager;" value="&lt;b&gt;Secrets Manager&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:10px;color:#64748B;&quot;&gt;Supabase DB Credentials&lt;/span&gt;" vertex="1">
+          <mxGeometry height="78" width="78" x="1240" y="122" as="geometry" />
+        </mxCell>
+        <mxCell id="node-bedrock" parent="1" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#01A88D;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=1;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.bedrock;" value="&lt;b&gt;Amazon Bedrock&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:10px;color:#64748B;&quot;&gt;Foundation Models&lt;br&gt;nova-lite-v1:0&lt;/span&gt;" vertex="1">
+          <mxGeometry height="78" width="78" x="1450" y="235" as="geometry" />
+        </mxCell>
+        <mxCell id="node-img-api-lambda" parent="1" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#ED7100;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=1;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.lambda;" value="&lt;b&gt;Image Search API Lambda&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:10px;color:#64748B;&quot;&gt;Node.js 20 / TypeScript&lt;br&gt;Job Creation &amp; Presigned URL&lt;/span&gt;" vertex="1">
+          <mxGeometry height="78" width="78" x="1140" y="475" as="geometry" />
+        </mxCell>
+        <mxCell id="node-dynamo" parent="1" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#C925D1;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=1;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.dynamodb;" value="&lt;b&gt;DynamoDB&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:10px;color:#64748B;&quot;&gt;Job Store Table&lt;br&gt;TTL: 3-day cleanup&lt;/span&gt;" vertex="1">
+          <mxGeometry height="78" width="78" x="1371" y="470" as="geometry" />
+        </mxCell>
+        <mxCell id="node-s3-images" parent="1" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#7AA116;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=1;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.s3;" value="&lt;b&gt;S3 Images Bucket&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size: 10px; color: rgb(100, 116, 139);&quot;&gt;Banknote Images Uploads&lt;br&gt;3-day Lifecycle Expiry&lt;/span&gt;" vertex="1">
+          <mxGeometry height="78" width="78" x="1140" y="730" as="geometry" />
+        </mxCell>
+        <mxCell id="node-processor-lambda" parent="1" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#ED7100;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=1;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.lambda;" value="&lt;b&gt;Image Processor Lambda&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size: 10px; color: rgb(100, 116, 139);&quot;&gt;Python 3.12 / Orchestrator&lt;br&gt;OCR + LLM Image Prompting&lt;/span&gt;" vertex="1">
+          <mxGeometry height="78" width="78" x="1460" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="node-textract" parent="1" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#01A88D;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=1;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.textract;" value="&lt;b&gt;Amazon Textract&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:10px;color:#64748B;&quot;&gt;Document OCR Engine&lt;br&gt;Extract Banknote Text&lt;/span&gt;" vertex="1">
+          <mxGeometry height="78" width="78" x="1600" y="830" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-user-next" edge="1" parent="1" source="node-collector" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=2;fontColor=#0F172A;fontSize=11;" target="node-nextjs" value="HTTPS">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-next-supabase" edge="1" parent="1" source="node-nextjs" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#15803D;strokeWidth=2;fontColor=#15803D;fontSize=11;exitX=0.5;exitY=0;entryX=0;entryY=0.5;" target="node-supabase" value="Auth &amp; Banknote Data (RLS)">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="360" y="198" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-next-redis" edge="1" parent="1" source="node-nextjs" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#047857;strokeWidth=2;fontColor=#047857;fontSize=11;" target="node-redis" value="Cache Read / Write">
+          <mxGeometry relative="1" x="0.1351" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-redis-numista" edge="1" parent="1" source="node-redis" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;strokeWidth=1.5;fontColor=#475569;fontSize=10;" target="node-numista" value="Catalog Query">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-redis-exchange" edge="1" parent="1" source="node-redis" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;strokeWidth=1.5;fontColor=#475569;fontSize=10;" target="node-exchange" value="FX Rates">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-redis-countries" edge="1" parent="1" source="node-redis" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;strokeWidth=1.5;fontColor=#475569;fontSize=10;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="node-countries" value="Countries &amp; Flags">
+          <mxGeometry relative="1" x="-0.0605" as="geometry">
+            <Array as="points">
+              <mxPoint x="360" y="770" />
+              <mxPoint x="530" y="770" />
+              <mxPoint x="530" y="880" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-next-apigw" edge="1" parent="1" source="node-nextjs" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#E7157B;strokeWidth=2;fontColor=#BE185D;fontSize=11;" target="node-apigw" value="REST API Requests&#xa;POST /v1/chat, POST/GET /v1/image-searches">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-next-s3" edge="1" parent="1" source="node-nextjs" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7AA116;strokeWidth=2;fontColor=#4D7C0F;fontSize=11;exitX=0.75;exitY=1;entryX=0;entryY=0.5;" target="node-s3-images" value="Direct S3 Upload (Presigned POST URL)">
+          <mxGeometry relative="1" x="-0.0005" as="geometry">
+            <Array as="points">
+              <mxPoint x="402.5" y="540" />
+              <mxPoint x="1060" y="540" />
+              <mxPoint x="1060" y="770" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-apigw-chat" edge="1" parent="1" source="node-apigw" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#ED7100;strokeWidth=2;fontColor=#C2410C;fontSize=11;exitX=1;exitY=0.25;entryX=0;entryY=0.5;" target="node-chat-lambda" value="POST /v1/chat">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1050" y="387.5" />
+              <mxPoint x="1050" y="309" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-apigw-imgapi" edge="1" parent="1" source="node-apigw" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#ED7100;strokeWidth=2;fontColor=#C2410C;fontSize=11;exitX=1;exitY=0.75;entryX=0;entryY=0.5;" target="node-img-api-lambda" value="POST/GET /v1/image-searches">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1050" y="427" />
+              <mxPoint x="1050" y="514" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-chat-secrets" edge="1" parent="1" source="node-chat-lambda" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#DD344C;strokeWidth=1.5;fontColor=#991B1B;fontSize=10;" target="node-secrets" value="Fetch DB Password">
+          <mxGeometry relative="1" x="0.4118" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-chat-supabase" edge="1" parent="1" source="node-chat-lambda" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#15803D;strokeWidth=1.5;fontColor=#15803D;fontSize=10;exitX=0;exitY=0.25;entryX=1;entryY=0.5;" target="node-supabase" value="Read-only SQL Query (Owner-scoped)">
+          <mxGeometry relative="1" x="0.0022" as="geometry">
+            <Array as="points">
+              <mxPoint x="1080" y="289.5" />
+              <mxPoint x="1080" y="197.5" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-chat-bedrock" edge="1" parent="1" source="node-chat-lambda" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#01A88D;strokeWidth=2;fontColor=#0F766E;fontSize=11;" target="node-bedrock" value="InvokeModel">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-imgapi-dynamo" edge="1" parent="1" source="node-img-api-lambda" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#C925D1;strokeWidth=2;fontColor=#86198F;fontSize=11;" target="node-dynamo" value="PutItem (create job)&#xa;GetItem (poll status)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-imgapi-s3" edge="1" parent="1" source="node-img-api-lambda" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7AA116;strokeWidth=1.5;fontColor=#4D7C0F;fontSize=10;" target="node-s3-images" value="Generate Presigned POST URL">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-s3-processor" edge="1" parent="1" source="node-s3-images" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;strokeColor=#ED7100;strokeWidth=2.5;fontColor=#C2410C;fontSize=11;" target="node-processor-lambda" value="S3 ObjectCreated Event">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-processor-textract" edge="1" parent="1" source="node-processor-lambda" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#01A88D;strokeWidth=1.5;fontColor=#0F766E;fontSize=10;" target="node-textract" value="DetectDocumentText (OCR)">
+          <mxGeometry relative="1" x="0.2453" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-processor-bedrock" edge="1" parent="1" source="node-processor-lambda" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#01A88D;strokeWidth=1.5;fontColor=#0F766E;fontSize=10;exitX=0.8;exitY=0;entryX=1.026;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" target="node-bedrock" value="InvokeModel">
+          <mxGeometry relative="1" x="-0.0412" as="geometry">
+            <Array as="points">
+              <mxPoint x="1640" y="660" />
+              <mxPoint x="1640" y="274" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-processor-numista" edge="1" parent="1" source="node-processor-lambda" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;strokeWidth=1.5;fontColor=#475569;fontSize=10;exitX=0.2;exitY=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" target="node-numista" value="Catalog Search &amp; Match Verification">
+          <mxGeometry relative="1" x="-0.0598" y="-20" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1470" y="758" />
+              <mxPoint x="1470" y="980" />
+              <mxPoint x="350" y="980" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-processor-dynamo" edge="1" parent="1" source="node-processor-lambda" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#C925D1;strokeWidth=2;fontColor=#86198F;fontSize=11;exitX=0.3;exitY=0;" target="node-dynamo" value="UpdateItem (status &amp; results)">
+          <mxGeometry relative="1" x="0.1974" as="geometry">
+            <Array as="points">
+              <mxPoint x="1483.4" y="590" />
+              <mxPoint x="1540" y="590" />
+              <mxPoint x="1540" y="498" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
